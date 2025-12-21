@@ -14,6 +14,7 @@ import Home from "./pages/Home"
 import Appointments from "./pages/Appointments"
 import Planner from "./pages/Planner"
 import Login from "./pages/Login"
+import {ComboboxDemo} from "./components/FunctionCbox"
 
 // Puedes crear estos luego si no existen aún
 import Account from "./pages/Account"
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
       { path: "planner", element: <Planner /> },
       { path: "account", element: <Account /> },
       { path: "record", element: <Record /> },
+      { path: "example", element: <ComboboxDemo /> },
     ],
   },
   {

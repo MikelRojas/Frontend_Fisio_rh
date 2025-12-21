@@ -11,6 +11,8 @@ export default function AppShell() {
     { id: "planner", title: "Agenda", href: "/planner" },
     { id: "record", title: "Expediente", href: "/record" },
     { id: "login", title: "LogIn", href: "/login" },
+    { id: "example", title: "example", href: "/example" },
+
   ]
 
   return (
