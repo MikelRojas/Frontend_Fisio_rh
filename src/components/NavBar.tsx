@@ -178,7 +178,15 @@ function NavActions() {
 
       {/* Si querés que al lado haya botón de salir, dejalo.
           Si querés SOLO el icono, borra este Button */}
-      <Button variant="destructive" onClick={logout}>
+      <Button
+        onClick={logout}
+        className="
+          bg-[#2f8f90]
+          hover:bg-[#277a7b]
+          text-white
+          font-semibold
+        "
+      >
         Salir
       </Button>
     </div>
