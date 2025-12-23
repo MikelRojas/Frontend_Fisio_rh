@@ -2,6 +2,10 @@
 
 import React from "react"
 import { NavLink } from "react-router-dom"
+import { Link } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/AuthContext"
+import { User } from "lucide-react"
 
 import {
   NavigationMenu,
@@ -65,19 +69,17 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
       )}
       {...rootProps}
     >
-      <div className="mx-auto max-w-[1280px] px-4 py-3 flex items-center">
+      <div className="mx-auto max-w-[1280px] px-4 py-3 flex items-center justify-between gap-4">
         {/* ---------- MOBILE BUTTON (placeholder) ---------- */}
-        {collapsibleOnMobile && (
-          <button
-            className="md:hidden mr-4 p-2 rounded-md hover:bg-muted/20"
-            onClick={() =>
-              console.log("TODO: implementar menú mobile")
-            }
-          >
-            {mobileIcon}
-          </button>
-        )}
-
+        <div className="flex items-center">
+          {collapsibleOnMobile && (
+            <button
+              className="md:hidden mr-4 p-2 rounded-md hover:bg-muted/20"
+              onClick={() => console.log("TODO: implementar menú mobile")}
+            >
+              {mobileIcon}
+            </button>
+          )}
         {/* ---------- MAIN NAVIGATION ---------- */}
         <NavigationMenu
           {...navigationMenuProps}
@@ -138,8 +140,48 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
           <NavigationMenuIndicator />
           <NavigationMenuViewport />
         </NavigationMenu>
+        </div>
+
+        {/* RIGHT: login or account icon */}
+        <NavActions />
       </div>
     </nav>
+  )
+}
+
+function NavActions() {
+  const { user, isAuthenticated, logout, isLoading } = useAuth()
+
+  if (isLoading) return null
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Link to="/login">
+        <Button>Login</Button>
+      </Link>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link
+        to="/account"
+        className={cn(
+          "h-10 w-10 inline-flex items-center justify-center rounded-md border",
+          "hover:bg-muted/40 transition"
+        )}
+        aria-label="Cuenta"
+        title="Cuenta"
+      >
+        <User className="h-5 w-5" />
+      </Link>
+
+      {/* Si querés que al lado haya botón de salir, dejalo.
+          Si querés SOLO el icono, borra este Button */}
+      <Button variant="destructive" onClick={logout}>
+        Salir
+      </Button>
+    </div>
   )
 }
 

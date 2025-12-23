@@ -6,11 +6,9 @@ import type { NavItem } from "@/components/NavBar"
 export default function AppShell() {
   const navbarItems: NavItem[] = [
     { id: "home", title: "Home", href: "/" },
-    { id: "account", title: "Cuenta", href: "/account" },
     { id: "appointments", title: "Citas", href: "/appointment" },
     { id: "planner", title: "Agenda", href: "/planner" },
     { id: "record", title: "Expediente", href: "/record" },
-    { id: "login", title: "LogIn", href: "/login" },
     { id: "example", title: "example", href: "/example" },
 
   ]
