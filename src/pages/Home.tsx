@@ -1,46 +1,79 @@
-import React, { useEffect, useState } from "react"
-import CustomButton from "../components/Buttom"
+import React, { useEffect, useState } from "react";
+import CustomButton from "../components/Buttom";
+import { useAuth } from "../lib/AuthContext";
+import {
+  getSiteInfo,
+  updateSiteInfo,
+  getSiteLocation,
+  updateSiteLocation,
+} from "../lib/site";
 
 const Home: React.FC = () => {
-  const isAdmin = true
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
-  const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("")
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
 
+  /* ---------------- GET AL CARGAR ---------------- */
   useEffect(() => {
-    setDescription(
-      localStorage.getItem("description") ||
-        "Bienvenidos! Fisioterapia RH ofrece el mejor servicio de la zona, con precio y horarios accesibles para ayudarte con tu rehabilitación, contracturas y demás."
-    )
+    async function loadData() {
+      try {
+        const info = await getSiteInfo();
+        setDescription(info.description);
+      } catch {
+        setDescription(
+          "Bienvenidos! Fisioterapia RH ofrece el mejor servicio de la zona."
+        );
+      }
 
-    setLocation(
-      localStorage.getItem("location") ||
-        "Hogar de Ancianos San Vicente de Paul, Ciudad Quesada, San Carlos, Costa Rica"
-    )
-  }, [])
+      try {
+        const loc = await getSiteLocation();
+        setLocation(loc.location);
+      } catch {
+        setLocation(
+          "Hogar de Ancianos San Vicente de Paul, Ciudad Quesada, San Carlos"
+        );
+      }
+    }
 
-  const saveDescription = (text: string) => {
-    setDescription(text)
-    localStorage.setItem("description", text)
-  }
+    loadData();
+  }, []);
 
-  const saveLocation = (text: string) => {
-    setLocation(text)
-    localStorage.setItem("location", text)
-  }
+  /* ---------------- UPDATES ADMIN ---------------- */
+  const handleEditInfo = async () => {
+    const text = prompt("Editar información:", description);
+    if (!text) return;
 
-  const handleEditLocation = () => {
-    const text = prompt("Editar ubicación:", location)
-    if (text) saveLocation(text)
-  }
+    try {
+      await updateSiteInfo(text);
+      setDescription(text);
+      alert("Información actualizada");
+    } catch {
+      alert("No autorizado");
+    }
+  };
+
+  const handleEditLocation = async () => {
+    const text = prompt("Editar ubicación:", location);
+    if (!text) return;
+
+    try {
+      await updateSiteLocation(text);
+      setLocation(text);
+      alert("Ubicación actualizada");
+    } catch {
+      alert("No autorizado");
+    }
+  };
 
   const mapsEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(
     location
-  )}&output=embed`
+  )}&output=embed`;
 
   const mapsRedirectUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     location
-  )}`
+  )}`;
 
   return (
     <div
@@ -59,13 +92,7 @@ const Home: React.FC = () => {
           </p>
 
           {isAdmin && (
-            <CustomButton
-              variant="secondary"
-              onClick={() => {
-                const text = prompt("Editar información:", description)
-                if (text) saveDescription(text)
-              }}
-            >
+            <CustomButton variant="secondary" onClick={handleEditInfo}>
               Editar info
             </CustomButton>
           )}
@@ -82,37 +109,35 @@ const Home: React.FC = () => {
 
       {/* ---------------- INFO ---------------- */}
       <section className="mx-auto max-w-[1280px] px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* MAPA + BOTONES */}
-      <div className="md:col-span-1 space-y-3">
         {/* MAPA */}
-        <div className="h-[300px] rounded-xl overflow-hidden shadow-lg">
-          <a href={mapsRedirectUrl} target="_blank" rel="noopener noreferrer">
-            <iframe
-              src={mapsEmbedUrl}
-              width="100%"
-              height="100%"
-              className="border-0"
-              loading="lazy"
-            />
-          </a>
-        </div>
-
-        {/* BOTONES */}
-        {isAdmin && (
-          <div className="flex gap-3 flex-wrap">
-            <CustomButton
-              variant="outline"
-              onClick={() => window.open(mapsRedirectUrl, "_blank")}
-            >
-              Abrir en Google Maps
-            </CustomButton>
-
-            <CustomButton variant="secondary" onClick={handleEditLocation}>
-              Editar ubicación
-            </CustomButton>
+        <div className="md:col-span-1 space-y-3">
+          <div className="h-[300px] rounded-xl overflow-hidden shadow-lg">
+            <a href={mapsRedirectUrl} target="_blank" rel="noopener noreferrer">
+              <iframe
+                src={mapsEmbedUrl}
+                width="100%"
+                height="100%"
+                className="border-0"
+                loading="lazy"
+              />
+            </a>
           </div>
-        )}
-      </div>
+
+          {isAdmin && (
+            <div className="flex gap-3 flex-wrap">
+              <CustomButton
+                variant="outline"
+                onClick={() => window.open(mapsRedirectUrl, "_blank")}
+              >
+                Abrir en Google Maps
+              </CustomButton>
+
+              <CustomButton variant="secondary" onClick={handleEditLocation}>
+                Editar ubicación
+              </CustomButton>
+            </div>
+          )}
+        </div>
 
         {/* UBICACIÓN */}
         <div className="text-gray-900">
@@ -121,15 +146,11 @@ const Home: React.FC = () => {
           <p className="font-medium">
             Horario: Lunes a viernes de 1:00 pm a 7:00 pm
           </p>
-          <h2 className="text-xl font-extrabold mb-2">
-          Preguntas Frecuentes
-        </h2>
-        <p className="font-medium">
-          </p>
-        <p className="font-medium max-w-xl mx-auto">
-          Si tienes dudas sobre nuestros servicios, nuestro asistente virtual
-          puede ayudarte.
-        </p>
+          <h2 className="text-xl font-extrabold mb-2"> Preguntas Frecuentes 
+            </h2>
+             <p className="font-medium"> 
+              </p> 
+              <p className="font-medium max-w-xl mx-auto"> Si tienes dudas sobre nuestros servicios, nuestro asistente virtual puede ayudarte. </p>
         </div>
 
         {/* CONTACTO */}
@@ -143,11 +164,10 @@ const Home: React.FC = () => {
       </section>
 
       {/* ---------------- CHATBOT ---------------- */}
-      <button className="fixed bottom-6 right-6 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition">
-        🤖
-      </button>
+       <button className="fixed bottom-6 right-6 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition"> 🤖 
+        </button>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
