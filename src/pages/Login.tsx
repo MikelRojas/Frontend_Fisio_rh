@@ -44,7 +44,7 @@ export default function Login() {
         setPassword("");
       } else {
         await login(email, password);
-        nav("/home");
+        nav("/");
       }
     } catch (err: any) {
       setError(err.message || "Ocurrió un error");
