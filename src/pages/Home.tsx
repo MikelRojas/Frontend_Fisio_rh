@@ -7,6 +7,7 @@ import {
   getSiteLocation,
   updateSiteLocation,
 } from "../lib/site";
+import ChatbotWidget from "../components/ChatbotWidget"
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -164,8 +165,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* ---------------- CHATBOT ---------------- */}
-       <button className="fixed bottom-6 right-6 bg-white rounded-full p-4 shadow-lg hover:scale-105 transition"> 🤖 
-        </button>
+      <ChatbotWidget />
     </div>
   );
 };
