@@ -1,8 +1,7 @@
-// src/lib/auth.ts
 import { apiFetch, setToken, clearToken } from "./api";
 
 export type User = {
-  id: string;
+  id: string;            
   full_name: string;
   email: string;
   role: "admin" | "user";
@@ -25,7 +24,6 @@ export async function login(email: string, password: string): Promise<User> {
   });
 
   setToken(data.access_token);
-  // guardamos user también para UX (opcional)
   localStorage.setItem("user", JSON.stringify(data.user));
   return data.user;
 }
@@ -38,16 +36,12 @@ export async function register(full_name: string, email: string, password: strin
   return data.user;
 }
 
-// Si tu backend /me devuelve { user: {...} } usa esto:
 export async function me(): Promise<User> {
   const data = await apiFetch<{ user: User }>("/api/auth/me", { method: "GET" });
   localStorage.setItem("user", JSON.stringify(data.user));
   return data.user;
 }
 
-// Si tu backend /me devuelve { jwt: {...} } y no user,
-// entonces mejor usa el "user" del localStorage para UI.
-// Pero ideal es que /me devuelva user real.
 export function logout() {
   clearToken();
   localStorage.removeItem("user");
