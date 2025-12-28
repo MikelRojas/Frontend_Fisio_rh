@@ -1,7 +1,7 @@
 import { apiFetch, setToken, clearToken } from "./api";
 
 export type User = {
-  id: string;            
+  id: string;
   full_name: string;
   email: string;
   role: "admin" | "user";
@@ -36,10 +36,28 @@ export async function register(full_name: string, email: string, password: strin
   return data.user;
 }
 
+
 export async function me(): Promise<User> {
   const data = await apiFetch<{ user: User }>("/api/auth/me", { method: "GET" });
   localStorage.setItem("user", JSON.stringify(data.user));
   return data.user;
+}
+
+export async function updateMe(full_name: string, email: string): Promise<User> {
+  const data = await apiFetch<{ message: string; user: User }>("/api/auth/me", {
+    method: "PUT",
+    body: JSON.stringify({ full_name, email }),
+  });
+  localStorage.setItem("user", JSON.stringify(data.user));
+  return data.user;
+}
+
+export async function changeMyPassword(current_password: string, new_password: string) {
+  const data = await apiFetch<{ message: string }>("/api/auth/me/password", {
+    method: "PUT",
+    body: JSON.stringify({ current_password, new_password }),
+  });
+  return data;
 }
 
 export function logout() {

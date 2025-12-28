@@ -93,7 +93,7 @@ export default function Login() {
                   id="fullName"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ej: Joja Pérez Soto"
+                  placeholder="Ej: Nombre completo"
                   required
                 />
               </div>
@@ -106,7 +106,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="joja@gmail.com"
+                placeholder="user@gmail.com"
                 required
               />
             </div>
