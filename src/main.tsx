@@ -17,9 +17,12 @@ import Planner from "./pages/Planner"
 import Login from "./pages/Login"
 import {ComboboxDemo} from "./components/FunctionCbox"
 
-// Puedes crear estos luego si no existen aún
 import Account from "./pages/Account"
 import Record from "./pages/Record"
+
+import ForgotPassword from "./pages/ForgotPassword";
+import ForgotPasswordConfirmed from "./pages/ForgotPasswordConfirmed";
+import ResetPassword from "./pages/ResetPassword";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +40,18 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  { 
+    path: "/forgot-password", 
+    element: <ForgotPassword /> 
+  },
+  { 
+    path: "/forgot-password/confirmed", 
+    element: <ForgotPasswordConfirmed /> 
+  },
+  { 
+    path: "/reset-password", 
+    element: <ResetPassword /> 
   },
   {
     path: "*",

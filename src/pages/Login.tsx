@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -140,7 +141,16 @@ export default function Login() {
                 </button>
               </div>
             </div>
-
+            {mode === "login" && (
+              <div className="text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-[#3eb8b9] hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+            )}
             {error && (
               <Alert>
                 <AlertDescription>{error}</AlertDescription>
