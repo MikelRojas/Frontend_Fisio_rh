@@ -1,3 +1,4 @@
+// src/pages/Appointments.tsx
 import React, { useEffect, useMemo, useState } from "react"
 import CustomButton from "../components/Buttom"
 import { apiFetch } from "../lib/api"
@@ -48,6 +49,8 @@ function formatDT(value?: string | null) {
   return d.toLocaleString()
 }
 
+type FilterKey = "all" | "requested" | "unpaid" | "paid"
+
 const Appointments: React.FC = () => {
   const user = useMemo(() => getCachedUser(), [])
   const isLoggedIn = !!user
@@ -56,7 +59,7 @@ const Appointments: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [isOpen, setIsOpen] = useState(false) // modal crear cita (ya lo tenías)
+  const [isOpen, setIsOpen] = useState(false) // modal crear cita
   const [form, setForm] = useState<CreateAppointmentPayload>({
     description: "",
     date: "",
@@ -69,9 +72,13 @@ const Appointments: React.FC = () => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
 
-  // ✅ NUEVO: modal detalle/editar para admin
+  // Modal detalle (admin edita / user solo ve y borra)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
+  const [draft, setDraft] = useState<Appointment | null>(null)
+
+  // ✅ NUEVO: filtros
+  const [filter, setFilter] = useState<FilterKey>("all")
 
   const openDetail = (appt: Appointment) => {
     setSelectedAppt(appt)
@@ -80,6 +87,15 @@ const Appointments: React.FC = () => {
   const closeDetail = () => {
     setIsDetailOpen(false)
     setSelectedAppt(null)
+    setDraft(null)
+  }
+
+  useEffect(() => {
+    if (isDetailOpen && selectedAppt) setDraft(selectedAppt)
+  }, [isDetailOpen, selectedAppt])
+
+  const setDraftField = (key: keyof Appointment, value: any) => {
+    setDraft((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
   const fetchAppointments = async () => {
@@ -92,11 +108,10 @@ const Appointments: React.FC = () => {
         return
       }
 
-      const url = isAdmin
-        ? "/api/appointments/" // ✅ admin ve todo
-        : `/api/appointments/?user_id=${encodeURIComponent(user.id)}` // ✅ user ve las suyas
-
-      const data = await apiFetch<Appointment[]>(url, { method: "GET" })
+      // Backend filtra por rol usando el token:
+      // - Admin: ve todo
+      // - User: ve solo lo suyo
+      const data = await apiFetch<Appointment[]>("/api/appointments/", { method: "GET" })
       setAppointments(Array.isArray(data) ? data : [])
     } catch (e: any) {
       console.error("Error cargando citas:", e)
@@ -112,7 +127,7 @@ const Appointments: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Cerrar modal detalle con ESC
+  // Cerrar modales con ESC
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -154,10 +169,6 @@ const Appointments: React.FC = () => {
       alert("Debes iniciar sesión para crear una cita.")
       return
     }
-    if (!user.id) {
-      alert("No se pudo identificar tu usuario (id). Vuelve a iniciar sesión.")
-      return
-    }
     if (!form.description.trim() || !form.date || !form.time) {
       alert("Completa descripción, fecha y hora.")
       return
@@ -168,8 +179,8 @@ const Appointments: React.FC = () => {
       const requested_start = toLocalIsoWithOffset(form.date, form.time)
       const requested_end = addMinutesWithOffset(requested_start, form.durationMin)
 
+      // No mandamos user_id: el backend lo toma del token
       const payload = {
-        user_id: user.id,
         description: form.description.trim(),
         comment: form.comment?.trim() ? form.comment.trim() : null,
         considerations: form.considerations?.trim() ? form.considerations.trim() : null,
@@ -193,13 +204,102 @@ const Appointments: React.FC = () => {
     }
   }
 
+  // ===== Acciones Admin / User en modal detalle =====
+
+  // ✅ Admin: confirmar (verde)
+  const confirmAppointment = async () => {
+    if (!draft) return
+
+    if (!draft.scheduled_start || !draft.scheduled_end) {
+      alert("Debes definir Scheduled start y Scheduled end para confirmar.")
+      return
+    }
+
+    try {
+      await apiFetch(`/api/appointments/${draft.id}/confirm`, {
+        method: "POST",
+        body: JSON.stringify({
+          scheduled_start: draft.scheduled_start,
+          scheduled_end: draft.scheduled_end,
+        }),
+      })
+
+      await fetchAppointments()
+      closeDetail()
+    } catch (e: any) {
+      alert(e?.message || "No se pudo confirmar la cita.")
+    }
+  }
+
+  // ✅ Admin: denegar (rojo)
+  const denyAppointment = async () => {
+    if (!draft) return
+    const ok = confirm("¿Seguro que deseas denegar esta cita?")
+    if (!ok) return
+
+    try {
+      await apiFetch(`/api/appointments/${draft.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "denied",
+        }),
+      })
+
+      await fetchAppointments()
+      closeDetail()
+    } catch (e: any) {
+      alert(e?.message || "No se pudo denegar la cita.")
+    }
+  }
+
+  // ✅ User: borrar
+  const deleteAppointment = async () => {
+    if (!selectedAppt) return
+    const ok = confirm("¿Seguro que deseas borrar esta cita?")
+    if (!ok) return
+
+    try {
+      await apiFetch(`/api/appointments/${selectedAppt.id}`, { method: "DELETE" })
+      await fetchAppointments()
+      closeDetail()
+    } catch (e: any) {
+      alert(e?.message || "No se pudo borrar la cita.")
+    }
+  }
+
+  // ✅ Aplicar filtros en frontend
+  const filteredAppointments = useMemo(() => {
+    const list = Array.isArray(appointments) ? appointments : []
+
+    switch (filter) {
+      case "requested":
+        return list.filter((a) => (a.status || "").toLowerCase() === "requested")
+      case "paid":
+        return list.filter((a) => !!a.is_paid)
+      case "unpaid":
+        // “Pendiente de pago”: tiene cita confirmada pero no pagada (ajusta si quieres otra lógica)
+        return list.filter(
+          (a) => (a.status || "").toLowerCase() === "confirmed" && !a.is_paid
+        )
+      case "all":
+      default:
+        return list
+    }
+  }, [appointments, filter])
+
+  const setFilterCheckbox = (next: FilterKey) => {
+    // checkboxes pero “solo uno a la vez”
+    setFilter(next)
+  }
+
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: "rgba(62, 184, 185, 0.25)" }}>
       <section className="mx-auto max-w-[1280px] px-6 py-12 grid grid-cols-1 md:grid-cols-[1fr_1px_3fr] gap-8">
         {/* LEFT */}
-        <div>
+        <div className="space-y-6">
+          {/* BLOQUE 1: Nueva cita */}
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-6">
-            <h2 className="text-xl font-extrabold text-gray-900 mb-3">Nueva cita</h2>
+            <h2 className="text-xl font-extrabold text-gray-900 mb-1">Nueva cita</h2>
             <p className="text-sm text-gray-600 mb-4">Agenda una nueva cita de forma rápida y sencilla.</p>
 
             {!isLoggedIn && (
@@ -217,6 +317,47 @@ const Appointments: React.FC = () => {
               + Crear cita
             </CustomButton>
           </div>
+
+          {/* BLOQUE 2: Filtros */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-extrabold text-gray-900 mb-3">Filtros</h3>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700 mb-2">
+              <input
+                type="checkbox"
+                checked={filter === "all"}
+                onChange={() => setFilterCheckbox("all")}
+              />
+              Todas las Citas
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700 mb-2">
+              <input
+                type="checkbox"
+                checked={filter === "requested"}
+                onChange={() => setFilterCheckbox("requested")}
+              />
+              Citas Solicitadas
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700 mb-2">
+              <input
+                type="checkbox"
+                checked={filter === "unpaid"}
+                onChange={() => setFilterCheckbox("unpaid")}
+              />
+              Citas Pendientes de Pago
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={filter === "paid"}
+                onChange={() => setFilterCheckbox("paid")}
+              />
+              Citas Pagadas
+            </label>
+          </div>
         </div>
 
         {/* DIVIDER */}
@@ -229,7 +370,11 @@ const Appointments: React.FC = () => {
           <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Citas programadas</h1>
 
           <p className="text-sm text-gray-600 mb-6">
-            {isLoggedIn ? (isAdmin ? "Viendo todas las citas (Admin)." : "Viendo tus citas.") : "Inicia sesión para ver tus citas."}
+            {isLoggedIn
+              ? isAdmin
+                ? "Viendo todas las citas (Admin)."
+                : "Viendo tus citas."
+              : "Inicia sesión para ver tus citas."}
           </p>
 
           {errorMsg && (
@@ -240,31 +385,29 @@ const Appointments: React.FC = () => {
             <div className="bg-white rounded-xl shadow-md p-6 text-gray-600">Cargando citas...</div>
           )}
 
-          {/* ✅ pedido: si no hay citas -> texto "No hay citas" */}
-          {!loading && isLoggedIn && appointments.length === 0 && !errorMsg && (
-            <div className="bg-white rounded-xl shadow-md p-10 text-center text-gray-600">No hay citas</div>
+          {!loading && isLoggedIn && filteredAppointments.length === 0 && !errorMsg && (
+            <div className="bg-white rounded-xl shadow-md p-10 text-center text-gray-600">
+              No hay citas
+            </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {appointments.map((appt) => (
+            {filteredAppointments.map((appt) => (
               <div
                 key={appt.id}
                 className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition relative"
               >
-                {/* ✅ Lapiz editar SOLO admin */}
-                {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => openDetail(appt)}
-                    className="absolute top-3 right-3 rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100"
-                    title="Ver/editar"
-                    aria-label="Ver/editar"
-                  >
-                    ✏️
-                  </button>
-                )}
+                {/* Detalle para todos: admin edita, user solo ve */}
+                <button
+                  type="button"
+                  onClick={() => openDetail(appt)}
+                  className="absolute top-3 right-3 rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100"
+                  title={isAdmin ? "Ver/editar" : "Ver"}
+                  aria-label={isAdmin ? "Ver/editar" : "Ver"}
+                >
+                  {isAdmin ? "✏️" : "👁️"}
+                </button>
 
-                {/* ✅ En admin: nombre real del usuario que creó la cita */}
                 <h3 className="text-lg font-bold text-gray-900 mb-1">
                   {isAdmin ? appt.user?.full_name ?? "Paciente" : user?.full_name ?? "Paciente"}
                 </h3>
@@ -292,7 +435,7 @@ const Appointments: React.FC = () => {
           </div>
         </div>
 
-        {/* MODAL: Crear cita (ya lo tenías) */}
+        {/* MODAL: Crear cita */}
         {isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/50" onClick={closeModal} />
@@ -376,13 +519,12 @@ const Appointments: React.FC = () => {
           </div>
         )}
 
-        {/* ✅ MODAL: Detalle/editar (Admin) */}
+        {/* MODAL: Detalle (Admin: 2 botones / User: borrar) */}
         {isDetailOpen && selectedAppt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/50" onClick={closeDetail} />
 
             <div className="relative z-10 w-[95%] max-w-xl rounded-2xl bg-white p-6 shadow-xl">
-              {/* X arriba derecha */}
               <button
                 type="button"
                 onClick={closeDetail}
@@ -394,13 +536,15 @@ const Appointments: React.FC = () => {
               </button>
 
               <h2 className="text-xl font-semibold text-slate-900 mb-1">Detalle de cita</h2>
-              <p className="text-sm text-slate-500 mb-5">Vista rápida de la información (Admin).</p>
+              <p className="text-sm text-slate-500 mb-5">
+                {isAdmin ? "Admin: puedes confirmar o denegar." : "Vista de la información."}
+              </p>
 
               <div className="space-y-3 text-sm">
                 <div className="rounded-xl border border-slate-200 p-3">
                   <p className="text-slate-500">Paciente</p>
                   <p className="font-semibold text-slate-900">
-                    {selectedAppt.user?.full_name ?? "Paciente"}
+                    {selectedAppt.user?.full_name ?? user?.full_name ?? "Paciente"}
                   </p>
                 </div>
 
@@ -433,14 +577,33 @@ const Appointments: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Scheduled editable para admin (necesario para confirmar) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-slate-200 p-3">
                     <p className="text-slate-500">Scheduled start</p>
-                    <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_start)}</p>
+                    {isAdmin ? (
+                      <input
+                        className="mt-1 w-full rounded-xl border px-3 py-2 font-mono"
+                        placeholder="YYYY-MM-DDTHH:mm:ss-06:00"
+                        value={draft?.scheduled_start ?? ""}
+                        onChange={(e) => setDraftField("scheduled_start", e.target.value)}
+                      />
+                    ) : (
+                      <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_start)}</p>
+                    )}
                   </div>
                   <div className="rounded-xl border border-slate-200 p-3">
                     <p className="text-slate-500">Scheduled end</p>
-                    <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_end)}</p>
+                    {isAdmin ? (
+                      <input
+                        className="mt-1 w-full rounded-xl border px-3 py-2 font-mono"
+                        placeholder="YYYY-MM-DDTHH:mm:ss-06:00"
+                        value={draft?.scheduled_end ?? ""}
+                        onChange={(e) => setDraftField("scheduled_end", e.target.value)}
+                      />
+                    ) : (
+                      <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_end)}</p>
+                    )}
                   </div>
                 </div>
 
@@ -459,6 +622,34 @@ const Appointments: React.FC = () => {
                 <CustomButton variant="ghost" type="button" onClick={closeDetail}>
                   Cerrar
                 </CustomButton>
+
+                {!isAdmin && (
+                  <CustomButton variant="primary" type="button" onClick={deleteAppointment}>
+                    Borrar cita
+                  </CustomButton>
+                )}
+
+                {isAdmin && (
+                  <>
+                    {/* 🔴 Denegar (rojo) */}
+                    <button
+                      type="button"
+                      onClick={denyAppointment}
+                      className="rounded-xl px-4 py-2 font-semibold text-white bg-red-600 hover:bg-red-700 transition"
+                    >
+                      Denegar cita
+                    </button>
+
+                    {/* 🟢 Confirmar (verde) */}
+                    <button
+                      type="button"
+                      onClick={confirmAppointment}
+                      className="rounded-xl px-4 py-2 font-semibold text-white bg-green-600 hover:bg-green-700 transition"
+                    >
+                      Confirmar cita
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
