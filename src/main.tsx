@@ -19,6 +19,7 @@ import {ComboboxDemo} from "./components/FunctionCbox"
 
 import Account from "./pages/Account"
 import Record from "./pages/Record"
+import Records from "./pages/Records";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ForgotPasswordConfirmed from "./pages/ForgotPasswordConfirmed";
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       { path: "account", element: <Account /> },
       { path: "record", element: <Record /> },
       { path: "example", element: <ComboboxDemo /> },
+      { path: "records", element: <Records /> },
     ],
   },
   {
