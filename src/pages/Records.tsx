@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useAuth } from "@/lib/AuthContext"
+import { Switch } from "@/components/ui/switch"
+
 import {
   addEntry,
   createRecord,
@@ -9,6 +11,7 @@ import {
   listAllRecords,
   searchRecords,
   updateRecord,
+  updateEntry,
   type PatientRecord,
   type RecordEntry,
 } from "@/lib/records"
@@ -365,9 +368,7 @@ function AdminRecords() {
 
                           {/* Entries table */}
                           <div className="rounded-xl border bg-white/70 p-3">
-                            <p className="font-semibold mb-2">
-                              Diagnósticos y tratamientos
-                            </p>
+                            <p className="font-semibold mb-2">Diagnósticos y tratamientos</p>
 
                             {!details ? (
                               <div className="text-sm text-muted-foreground">
@@ -385,31 +386,64 @@ function AdminRecords() {
                                       <th className="py-2 pr-3">Fecha</th>
                                       <th className="py-2 pr-3">Diagnóstico</th>
                                       <th className="py-2 pr-3">Tratamiento</th>
-                                      <th className="py-2">Estado</th>
+                                      <th className="py-2 pr-3">Estado</th>
+                                      <th className="py-2">Acción</th>
                                     </tr>
                                   </thead>
+
                                   <tbody>
                                     {details.entries.map((e) => (
                                       <tr key={e.id} className="border-t">
                                         <td className="py-2 pr-3 whitespace-nowrap">
                                           {e.entry_date}
                                         </td>
+
                                         <td className="py-2 pr-3">
                                           {e.diagnosis}
                                         </td>
+
                                         <td className="py-2 pr-3">
                                           {e.treatment}
                                         </td>
-                                        <td className="py-2">
+
+                                        {/* Estado visual */}
+                                        <td className="py-2 pr-3">
                                           {e.is_current ? (
-                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                                            <Badge className="bg-emerald-100 text-emerald-700">
                                               Actual
                                             </Badge>
                                           ) : (
-                                            <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100">
+                                            <Badge className="bg-gray-100 text-gray-700">
                                               No vigente
                                             </Badge>
                                           )}
+                                        </td>
+
+                                        {/* ✅ Switch para marcar vigente / no vigente */}
+                                        <td className="py-2">
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={e.is_current}
+                                              onCheckedChange={async (checked) => {
+                                                try {
+                                                  await updateEntry(e.id, { is_current: checked })
+                                                  const updated = await getRecord(details.record.id)
+                                                  setDetailsById((prev) => ({
+                                                    ...prev,
+                                                    [details.record.id]: updated,
+                                                  }))
+                                                } catch (err: any) {
+                                                  setErr(
+                                                    err?.message ??
+                                                      "No se pudo actualizar el diagnóstico."
+                                                  )
+                                                }
+                                              }}
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                              {e.is_current ? "Vigente" : "No vigente"}
+                                            </span>
+                                          </div>
                                         </td>
                                       </tr>
                                     ))}

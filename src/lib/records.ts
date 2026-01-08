@@ -68,3 +68,11 @@ export async function addEntry(recordId: string, payload: Partial<RecordEntry>) 
 export async function getMyRecord(): Promise<{ record: PatientRecord | null; entries: RecordEntry[] }> {
   return apiFetch("/api/records/me", { method: "GET" });
 }
+
+export async function updateEntry(entryId: string, payload: Partial<RecordEntry>) {
+  const data = await apiFetch<{ entry: RecordEntry }>(`/api/records/entries/${entryId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  })
+  return data.entry
+}
