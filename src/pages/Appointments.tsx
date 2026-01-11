@@ -49,7 +49,24 @@ function formatDT(value?: string | null) {
   return d.toLocaleString()
 }
 
-type FilterKey = "all" | "requested" | "unpaid" | "paid"
+// Convierte ISO (o null) -> valor para <input type="datetime-local"> ("YYYY-MM-DDTHH:mm")
+function toDatetimeLocalValue(iso?: string | null) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`
+}
+
+// Convierte "YYYY-MM-DDTHH:mm" -> ISO con offset CR "-06:00"
+function fromDatetimeLocalToIsoCR(localValue: string) {
+  if (!localValue) return ""
+  return `${localValue}:00-06:00`
+}
+
+type FilterKey = "all" | "requested" | "unpaid" | "paid" | "cancelled"
 
 const Appointments: React.FC = () => {
   const user = useMemo(() => getCachedUser(), [])
@@ -77,7 +94,11 @@ const Appointments: React.FC = () => {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
   const [draft, setDraft] = useState<Appointment | null>(null)
 
-  // ✅ NUEVO: filtros
+  // ✅ Switch pago (solo UI; se sincroniza con selectedAppt)
+  const [paidSwitch, setPaidSwitch] = useState(false)
+  const [updatingPaid, setUpdatingPaid] = useState(false)
+
+  // filtros
   const [filter, setFilter] = useState<FilterKey>("all")
 
   const openDetail = (appt: Appointment) => {
@@ -88,10 +109,14 @@ const Appointments: React.FC = () => {
     setIsDetailOpen(false)
     setSelectedAppt(null)
     setDraft(null)
+    setUpdatingPaid(false)
   }
 
   useEffect(() => {
-    if (isDetailOpen && selectedAppt) setDraft(selectedAppt)
+    if (isDetailOpen && selectedAppt) {
+      setDraft(selectedAppt)
+      setPaidSwitch(!!selectedAppt.is_paid)
+    }
   }, [isDetailOpen, selectedAppt])
 
   const setDraftField = (key: keyof Appointment, value: any) => {
@@ -108,9 +133,6 @@ const Appointments: React.FC = () => {
         return
       }
 
-      // Backend filtra por rol usando el token:
-      // - Admin: ve todo
-      // - User: ve solo lo suyo
       const data = await apiFetch<Appointment[]>("/api/appointments/", { method: "GET" })
       setAppointments(Array.isArray(data) ? data : [])
     } catch (e: any) {
@@ -137,6 +159,7 @@ const Appointments: React.FC = () => {
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleChange = (
@@ -179,7 +202,6 @@ const Appointments: React.FC = () => {
       const requested_start = toLocalIsoWithOffset(form.date, form.time)
       const requested_end = addMinutesWithOffset(requested_start, form.durationMin)
 
-      // No mandamos user_id: el backend lo toma del token
       const payload = {
         description: form.description.trim(),
         comment: form.comment?.trim() ? form.comment.trim() : null,
@@ -206,7 +228,7 @@ const Appointments: React.FC = () => {
 
   // ===== Acciones Admin / User en modal detalle =====
 
-  // ✅ Admin: confirmar (verde)
+  // Admin: confirmar
   const confirmAppointment = async () => {
     if (!draft) return
 
@@ -231,28 +253,75 @@ const Appointments: React.FC = () => {
     }
   }
 
-  // ✅ Admin: denegar (rojo)
-  const denyAppointment = async () => {
+  // Admin: cancelar (POST /cancel)
+  const cancelAppointment = async () => {
     if (!draft) return
-    const ok = confirm("¿Seguro que deseas denegar esta cita?")
+
+    const ok = confirm("¿Seguro que deseas cancelar esta cita?")
     if (!ok) return
 
+    const reasonInput = prompt("Motivo de cancelación (opcional):")
+    const reason = reasonInput?.trim() ? reasonInput.trim() : undefined
+
     try {
-      await apiFetch(`/api/appointments/${draft.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: "denied",
-        }),
+      await apiFetch(`/api/appointments/${draft.id}/cancel`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
       })
 
       await fetchAppointments()
       closeDetail()
     } catch (e: any) {
-      alert(e?.message || "No se pudo denegar la cita.")
+      alert(e?.message || "No se pudo cancelar la cita.")
     }
   }
 
-  // ✅ User: borrar
+  // ✅ Admin: toggle pago vía /set-paid (switch)
+  const togglePaid = async (nextPaid: boolean) => {
+    if (!selectedAppt) return
+
+    // Reglas simples: no permitir editar pago si está cancelada
+    const statusLower = (selectedAppt.status || "").toLowerCase()
+    if (statusLower === "cancelled") {
+      alert("No se puede editar el pago de una cita cancelada.")
+      return
+    }
+
+    const ok = confirm(
+      nextPaid ? "¿Marcar esta cita como PAGADA?" : "¿Marcar esta cita como NO pagada?"
+    )
+    if (!ok) return
+
+    const notePrompt = nextPaid
+      ? "Nota de pago (opcional):"
+      : "Motivo para quitar pago (opcional):"
+    const noteInput = prompt(notePrompt)
+    const note = noteInput?.trim() ? noteInput.trim() : undefined
+
+    // Optimistic UI + rollback si falla
+    const prev = paidSwitch
+    setPaidSwitch(nextPaid)
+    setUpdatingPaid(true)
+
+    try {
+      await apiFetch(`/api/appointments/${selectedAppt.id}/set-paid`, {
+        method: "POST",
+        body: JSON.stringify({ is_paid: nextPaid, note }),
+      })
+
+      // refrescar lista y mantener consistencia
+      await fetchAppointments()
+      closeDetail()
+    } catch (e: any) {
+      console.error("Error actualizando pago:", e)
+      setPaidSwitch(prev)
+      alert(e?.message || "No se pudo actualizar el pago.")
+    } finally {
+      setUpdatingPaid(false)
+    }
+  }
+
+  // User: borrar
   const deleteAppointment = async () => {
     if (!selectedAppt) return
     const ok = confirm("¿Seguro que deseas borrar esta cita?")
@@ -267,7 +336,7 @@ const Appointments: React.FC = () => {
     }
   }
 
-  // ✅ Aplicar filtros en frontend
+  // Filtros
   const filteredAppointments = useMemo(() => {
     const list = Array.isArray(appointments) ? appointments : []
 
@@ -277,10 +346,11 @@ const Appointments: React.FC = () => {
       case "paid":
         return list.filter((a) => !!a.is_paid)
       case "unpaid":
-        // “Pendiente de pago”: tiene cita confirmada pero no pagada (ajusta si quieres otra lógica)
         return list.filter(
           (a) => (a.status || "").toLowerCase() === "confirmed" && !a.is_paid
         )
+      case "cancelled":
+        return list.filter((a) => (a.status || "").toLowerCase() === "cancelled")
       case "all":
       default:
         return list
@@ -288,19 +358,23 @@ const Appointments: React.FC = () => {
   }, [appointments, filter])
 
   const setFilterCheckbox = (next: FilterKey) => {
-    // checkboxes pero “solo uno a la vez”
     setFilter(next)
   }
 
   return (
-    <div className="min-h-screen font-sans" style={{ backgroundColor: "rgba(62, 184, 185, 0.25)" }}>
+    <div
+      className="min-h-screen font-sans"
+      style={{ backgroundColor: "rgba(62, 184, 185, 0.25)" }}
+    >
       <section className="mx-auto max-w-[1280px] px-6 py-12 grid grid-cols-1 md:grid-cols-[1fr_1px_3fr] gap-8">
         {/* LEFT */}
         <div className="space-y-6">
           {/* BLOQUE 1: Nueva cita */}
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-6">
             <h2 className="text-xl font-extrabold text-gray-900 mb-1">Nueva cita</h2>
-            <p className="text-sm text-gray-600 mb-4">Agenda una nueva cita de forma rápida y sencilla.</p>
+            <p className="text-sm text-gray-600 mb-4">
+              Agenda una nueva cita de forma rápida y sencilla.
+            </p>
 
             {!isLoggedIn && (
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -349,13 +423,22 @@ const Appointments: React.FC = () => {
               Citas Pendientes de Pago
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-slate-700 mb-2">
               <input
                 type="checkbox"
                 checked={filter === "paid"}
                 onChange={() => setFilterCheckbox("paid")}
               />
               Citas Pagadas
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={filter === "cancelled"}
+                onChange={() => setFilterCheckbox("cancelled")}
+              />
+              Citas Canceladas
             </label>
           </div>
         </div>
@@ -378,11 +461,15 @@ const Appointments: React.FC = () => {
           </p>
 
           {errorMsg && (
-            <div className="mb-5 bg-white rounded-xl shadow-md p-4 text-sm text-red-600">{errorMsg}</div>
+            <div className="mb-5 bg-white rounded-xl shadow-md p-4 text-sm text-red-600">
+              {errorMsg}
+            </div>
           )}
 
           {loading && (
-            <div className="bg-white rounded-xl shadow-md p-6 text-gray-600">Cargando citas...</div>
+            <div className="bg-white rounded-xl shadow-md p-6 text-gray-600">
+              Cargando citas...
+            </div>
           )}
 
           {!loading && isLoggedIn && filteredAppointments.length === 0 && !errorMsg && (
@@ -397,7 +484,6 @@ const Appointments: React.FC = () => {
                 key={appt.id}
                 className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition relative"
               >
-                {/* Detalle para todos: admin edita, user solo ve */}
                 <button
                   type="button"
                   onClick={() => openDetail(appt)}
@@ -427,7 +513,8 @@ const Appointments: React.FC = () => {
                     <span className="font-semibold">Estado:</span> {appt.status}
                   </p>
                   <p>
-                    <span className="font-semibold">Pago:</span> {appt.is_paid ? "Pagado" : "Pendiente"}
+                    <span className="font-semibold">Pago:</span>{" "}
+                    {appt.is_paid ? "Pagado" : "Pendiente"}
                   </p>
                 </div>
               </div>
@@ -519,9 +606,13 @@ const Appointments: React.FC = () => {
           </div>
         )}
 
-        {/* MODAL: Detalle (Admin: 2 botones / User: borrar) */}
+        {/* MODAL: Detalle */}
         {isDetailOpen && selectedAppt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+          >
             <div className="absolute inset-0 bg-black/50" onClick={closeDetail} />
 
             <div className="relative z-10 w-[95%] max-w-xl rounded-2xl bg-white p-6 shadow-xl">
@@ -537,7 +628,7 @@ const Appointments: React.FC = () => {
 
               <h2 className="text-xl font-semibold text-slate-900 mb-1">Detalle de cita</h2>
               <p className="text-sm text-slate-500 mb-5">
-                {isAdmin ? "Admin: puedes confirmar o denegar." : "Vista de la información."}
+                {isAdmin ? "Admin: puedes confirmar, cancelar y editar pago." : "Vista de la información."}
               </p>
 
               <div className="space-y-3 text-sm">
@@ -558,11 +649,53 @@ const Appointments: React.FC = () => {
                     <p className="text-slate-500">Estado</p>
                     <p className="font-semibold text-slate-900">{selectedAppt.status}</p>
                   </div>
+
                   <div className="rounded-xl border border-slate-200 p-3">
                     <p className="text-slate-500">Pago</p>
-                    <p className="font-semibold text-slate-900">
-                      {selectedAppt.is_paid ? "Pagado" : "Pendiente"}
-                    </p>
+
+                    {/* ✅ SWITCH (solo admin) */}
+                    {isAdmin ? (
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {paidSwitch ? "Pagado" : "Pendiente"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {selectedAppt.paid_at ? `Pagado el: ${formatDT(selectedAppt.paid_at)}` : "—"}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={updatingPaid || (selectedAppt.status || "").toLowerCase() === "cancelled"}
+                          onClick={() => togglePaid(!paidSwitch)}
+                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
+                            paidSwitch ? "bg-green-600" : "bg-slate-300"
+                          } ${
+                            updatingPaid || (selectedAppt.status || "").toLowerCase() === "cancelled"
+                              ? "opacity-60 cursor-not-allowed"
+                              : "cursor-pointer"
+                          }`}
+                          aria-pressed={paidSwitch}
+                          aria-label="Cambiar estado de pago"
+                          title={
+                            (selectedAppt.status || "").toLowerCase() === "cancelled"
+                              ? "No se puede editar el pago de una cita cancelada"
+                              : "Cambiar estado de pago"
+                          }
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                              paidSwitch ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="font-semibold text-slate-900">
+                        {selectedAppt.is_paid ? "Pagado" : "Pendiente"}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -577,29 +710,34 @@ const Appointments: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Scheduled editable para admin (necesario para confirmar) */}
+                {/* Scheduled editable para admin */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-slate-200 p-3">
                     <p className="text-slate-500">Scheduled start</p>
                     {isAdmin ? (
                       <input
-                        className="mt-1 w-full rounded-xl border px-3 py-2 font-mono"
-                        placeholder="YYYY-MM-DDTHH:mm:ss-06:00"
-                        value={draft?.scheduled_start ?? ""}
-                        onChange={(e) => setDraftField("scheduled_start", e.target.value)}
+                        type="datetime-local"
+                        className="mt-1 w-full rounded-xl border px-3 py-2"
+                        value={toDatetimeLocalValue(draft?.scheduled_start)}
+                        onChange={(e) =>
+                          setDraftField("scheduled_start", fromDatetimeLocalToIsoCR(e.target.value))
+                        }
                       />
                     ) : (
                       <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_start)}</p>
                     )}
                   </div>
+
                   <div className="rounded-xl border border-slate-200 p-3">
                     <p className="text-slate-500">Scheduled end</p>
                     {isAdmin ? (
                       <input
-                        className="mt-1 w-full rounded-xl border px-3 py-2 font-mono"
-                        placeholder="YYYY-MM-DDTHH:mm:ss-06:00"
-                        value={draft?.scheduled_end ?? ""}
-                        onChange={(e) => setDraftField("scheduled_end", e.target.value)}
+                        type="datetime-local"
+                        className="mt-1 w-full rounded-xl border px-3 py-2"
+                        value={toDatetimeLocalValue(draft?.scheduled_end)}
+                        onChange={(e) =>
+                          setDraftField("scheduled_end", fromDatetimeLocalToIsoCR(e.target.value))
+                        }
                       />
                     ) : (
                       <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_end)}</p>
@@ -631,16 +769,14 @@ const Appointments: React.FC = () => {
 
                 {isAdmin && (
                   <>
-                    {/* 🔴 Denegar (rojo) */}
                     <button
                       type="button"
-                      onClick={denyAppointment}
+                      onClick={cancelAppointment}
                       className="rounded-xl px-4 py-2 font-semibold text-white bg-red-600 hover:bg-red-700 transition"
                     >
-                      Denegar cita
+                      Cancelar cita
                     </button>
 
-                    {/* 🟢 Confirmar (verde) */}
                     <button
                       type="button"
                       onClick={confirmAppointment}
