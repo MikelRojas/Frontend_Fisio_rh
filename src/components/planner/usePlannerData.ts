@@ -31,6 +31,11 @@ export function usePlannerData() {
 
         setPlannerItems(pItems)
         setAppointments(appts)
+        console.log("loading month range", {
+          monthDate,
+          from: startOfMonth(monthDate).toISOString(),
+          to: endOfMonth(monthDate).toISOString(),
+        })        
       } finally {
         setLoading(false)
       }

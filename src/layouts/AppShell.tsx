@@ -9,8 +9,6 @@ export default function AppShell() {
     { id: "appointments", title: "Citas", href: "/appointment" },
     { id: "planner", title: "Agenda", href: "/planner" },
     { id: "record", title: "Expediente", href: "/record" },
-    { id: "example", title: "example", href: "/example" },
-
   ]
 
   return (

@@ -54,9 +54,7 @@ export async function createPlannerItem(payload: {
 
 
 export async function listAppointments(params: { from: string; to: string; status?: string }) {
-  // tu API actual: GET /api/appointments?status=...&...
-  // acá agrego from/to como idea; si tu backend aún no filtra por rango,
-  // podés traer y filtrar en frontend.
   const qs = new URLSearchParams(params as any).toString()
-  return apiFetch<Appointment[]>(`/api/appointments?${qs}`, { method: "GET" })
+  return apiFetch<Appointment[]>(`/api/appointments/?${qs}`, { method: "GET" })
 }
+
