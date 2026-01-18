@@ -6,6 +6,7 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/AuthContext"
 import { User } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import {
   NavigationMenu,
@@ -16,8 +17,9 @@ import {
   NavigationMenuLink,
   NavigationMenuViewport,
   NavigationMenuIndicator,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+
+import {navigationMenuTriggerStyle} from "@/components/ui/navigation-menu.styles"
 
 import { cn } from "@/lib/utils"
 import { ChevronDown, Menu } from "lucide-react"
@@ -151,6 +153,7 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
 
 function NavActions() {
   const { user, isAuthenticated, logout, isLoading } = useAuth()
+  const navigate = useNavigate()
 
   if (isLoading) return null
 
@@ -160,6 +163,11 @@ function NavActions() {
         <Button>Login</Button>
       </Link>
     )
+  }
+
+  function handleLogout() {
+    logout()
+    navigate("/") // ✅ redirige a Home
   }
 
   return (
@@ -176,10 +184,8 @@ function NavActions() {
         <User className="h-5 w-5" />
       </Link>
 
-      {/* Si querés que al lado haya botón de salir, dejalo.
-          Si querés SOLO el icono, borra este Button */}
       <Button
-        onClick={logout}
+        onClick={handleLogout}
         className="
           bg-[#2f8f90]
           hover:bg-[#277a7b]

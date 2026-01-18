@@ -5,10 +5,10 @@ const API_URL = "http://127.0.0.1:5000";
 export async function getSiteInfo() {
   const res = await fetch(`${API_URL}/site/info`);
   if (!res.ok) throw new Error("Error al obtener info");
-  return res.json();
+  return res.json(); // { info: string }
 }
 
-export async function updateSiteInfo(description: string) {
+export async function updateSiteInfo(info: string) {
   const token = getToken();
 
   const res = await fetch(`${API_URL}/site/info`, {
@@ -17,7 +17,8 @@ export async function updateSiteInfo(description: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ description }),
+    // ✅ backend espera { info: "..." }
+    body: JSON.stringify({ info }),
   });
 
   if (!res.ok) throw new Error("No autorizado");
@@ -27,7 +28,7 @@ export async function updateSiteInfo(description: string) {
 export async function getSiteLocation() {
   const res = await fetch(`${API_URL}/site/location`);
   if (!res.ok) throw new Error("Error al obtener ubicación");
-  return res.json();
+  return res.json(); // { location: string }
 }
 
 export async function updateSiteLocation(location: string) {

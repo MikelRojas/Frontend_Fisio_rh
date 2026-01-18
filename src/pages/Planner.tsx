@@ -6,6 +6,7 @@ import MonthCalendar from "@/components/planner/MonthCalendar"
 import DayTimeline from "@/components/planner/DayTimeline"
 import AddPlannerItemDialog from "@/components/planner/AddPlannerItemDialog"
 import { usePlannerData } from "@/components/planner/usePlannerData"
+import CustomAlert from "@/components/Alert"
 
 const Planner: React.FC = () => {
   const {
@@ -16,11 +17,23 @@ const Planner: React.FC = () => {
     loading,
     dayEntries,
     reloadMonth,
+    error,
   } = usePlannerData()
 
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-3xl font-bold">Agenda</h1>
+
+      {error && (
+        <div className="max-w-5xl">
+          <CustomAlert
+            type="error"
+            title="No se pudo cargar la agenda"
+            description={error}
+            onClose={() => {}}
+          />
+        </div>
+      )}
 
       <PlannerHeader
         monthDate={monthDate}
@@ -44,7 +57,12 @@ const Planner: React.FC = () => {
         </div>
 
         <div className="min-h-[520px]">
-          <DayTimeline selectedDay={selectedDay} loading={loading} entries={dayEntries} />
+          <DayTimeline
+            selectedDay={selectedDay}
+            loading={loading}
+            entries={dayEntries}
+            onChanged={reloadMonth}
+          />
         </div>
       </div>
 
