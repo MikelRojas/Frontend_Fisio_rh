@@ -20,29 +20,26 @@ interface Appointment {
   comment?: string | null
   considerations?: string | null
   user?: { full_name: string } | null
+
+  proposals?: {
+    id: string
+    start_at: string
+    end_at: string
+    rank: number
+    is_selected: boolean
+  }[]
 }
+
 
 type CreateAppointmentPayload = {
   description: string
-  date: string
-  time: string
-  durationMin: number
   comment?: string
   considerations?: string
+  proposed_starts: string[] // 3 ISO strings
 }
 
-// Costa Rica UTC-6
-function toLocalIsoWithOffset(date: string, time: string) {
-  return `${date}T${time}:00-06:00`
-}
-function addMinutesWithOffset(iso: string, minutes: number) {
-  const d = new Date(iso)
-  d.setMinutes(d.getMinutes() + minutes)
-  const pad = (n: number) => String(n).padStart(2, "0")
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}:00-06:00`
-}
+
+
 
 function formatDT(value?: string | null) {
   if (!value) return "—"
@@ -67,12 +64,11 @@ const Appointments: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [form, setForm] = useState<CreateAppointmentPayload>({
     description: "",
-    date: "",
-    time: "",
-    durationMin: 60,
     comment: "",
     considerations: "",
+    proposed_starts: [],
   })
+  
   const [submitting, setSubmitting] = useState(false)
 
   // Modal detalle (admin/user)
@@ -85,6 +81,8 @@ const Appointments: React.FC = () => {
     title: string
     description?: string
   } | null>(null)
+  const [confirmingProposalId, setConfirmingProposalId] = useState<string | null>(null)
+
 
   // ✅ Switch pago (solo admin)
   const [paidSwitch, setPaidSwitch] = useState(false)
@@ -113,12 +111,41 @@ const Appointments: React.FC = () => {
   const resetForm = () => {
     setForm({
       description: "",
-      date: "",
-      time: "",
-      durationMin: 60,
       comment: "",
       considerations: "",
+      proposed_starts: [],
     })
+  }
+
+  const [weekFrom, setWeekFrom] = useState("") 
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
+
+  async function fetchAvailability(fromDate: string) {
+    setLoadingSlots(true)
+    try {
+      // semana: from 00:00 a +7 días
+      const fromIso = `${fromDate}T00:00:00-06:00`
+      const to = new Date(fromIso)
+      to.setDate(to.getDate() + 7)
+      const toIso = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, "0")}-${String(
+        to.getDate()
+      ).padStart(2, "0")}T00:00:00-06:00`
+  
+      const res = await apiFetch<{ slots: string[] }>("/api/appointments/availability?from=" + encodeURIComponent(fromIso) + "&to=" + encodeURIComponent(toIso), {
+        method: "GET",
+      })
+      setAvailableSlots(Array.isArray(res?.slots) ? res.slots : [])
+    } catch (e: any) {
+      setAvailableSlots([])
+      setUiAlert({
+        type: "error",
+        title: "No se pudo cargar disponibilidad",
+        description: e?.message ?? "Error inesperado",
+      })
+    } finally {
+      setLoadingSlots(false)
+    }
   }
 
   const fetchAppointments = async () => {
@@ -153,8 +180,14 @@ const Appointments: React.FC = () => {
 
   useEffect(() => {
     fetchAppointments()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (!weekFrom) return
+    fetchAvailability(weekFrom)
+  }, [isOpen, weekFrom])
+  
 
   // Cerrar modales con ESC
   useEffect(() => {
@@ -173,11 +206,8 @@ const Appointments: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === "durationMin" ? Number(value) : value,
-    }))
-  }
+    setForm((prev) => ({ ...prev, [name]: value }))
+  }  
 
   // User: crear cita
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,27 +227,19 @@ const Appointments: React.FC = () => {
       setUiAlert({ type: "warning", title: "Descripción requerida" })
       return
     }
-    if (!form.date) {
-      setUiAlert({ type: "warning", title: "Fecha requerida" })
+    if (form.proposed_starts.length !== 3) {
+      setUiAlert({ type: "warning", title: "Debes seleccionar 3 opciones" })
       return
-    }
-    if (!form.time) {
-      setUiAlert({ type: "warning", title: "Hora requerida" })
-      return
-    }
+    }    
 
     setSubmitting(true)
     try {
-      const requested_start = toLocalIsoWithOffset(form.date, form.time)
-      const requested_end = addMinutesWithOffset(requested_start, form.durationMin)
-
       const payload = {
         description: form.description.trim(),
         comment: form.comment?.trim() ? form.comment.trim() : null,
         considerations: form.considerations?.trim() ? form.considerations.trim() : null,
-        requested_start,
-        requested_end,
-      }
+        proposed_starts: form.proposed_starts,
+      }      
 
       await apiFetch("/api/appointments/", {
         method: "POST",
@@ -427,8 +449,13 @@ const Appointments: React.FC = () => {
     // fecha (scheduled_start si existe, si no requested_start)
     if (filterDate) {
       list = list.filter((a) => {
-        const base = a.scheduled_start || a.requested_start
+        const base =
+          a.scheduled_start ||
+          a.requested_start ||
+          a.proposals?.[0]?.start_at ||
+          null
         if (!base) return false
+
         const d = new Date(base)
         const y = d.getFullYear()
         const m = String(d.getMonth() + 1).padStart(2, "0")
@@ -460,6 +487,7 @@ const Appointments: React.FC = () => {
               onClose={() => setUiAlert(null)}
             />
           )}
+
 
           {/* BLOQUE 1: Nueva cita (solo USER) */}
           {!isAdmin && (
@@ -593,7 +621,7 @@ const Appointments: React.FC = () => {
                   title="Ver detalle"
                   aria-label="Ver detalle"
                 >
-                  👁️
+                  📝
                 </button>
 
                 <h3 className="text-lg font-bold text-gray-900 mb-1">
@@ -603,14 +631,21 @@ const Appointments: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-2">{appt.description}</p>
 
                 <div className="text-sm text-gray-700 space-y-1">
+                  - 
                   <p>
                     <span className="font-semibold">Fecha:</span>{" "}
-                    {appt.scheduled_start
-                      ? new Date(appt.scheduled_start).toLocaleString()
-                      : appt.requested_start
-                      ? new Date(appt.requested_start).toLocaleString()
-                      : "Pendiente"}
+                    {(appt.status || "").toLowerCase() === "requested" ? (
+                      <span className="text-slate-500">
+                        Pendiente{" "}
+                        {appt.proposals?.length ? `(${appt.proposals.length} opciones propuestas)` : ""}
+                      </span>
+                    ) : appt.scheduled_start ? (
+                      new Date(appt.scheduled_start).toLocaleString()
+                    ) : (
+                      <span className="text-slate-500">—</span>
+                    )}
                   </p>
+
                   <p>
                     <span className="font-semibold">Estado:</span> {appt.status}
                   </p>
@@ -654,46 +689,104 @@ const Appointments: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Fecha <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border px-3 py-2"
-                  />
+                {/* Semana a consultar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-semibold">Semana (lunes recomendado)</label>
+                    <input
+                      type="date"
+                      className="w-full rounded-lg border px-3 py-2 bg-white"
+                      value={weekFrom}
+                      onChange={(e) => setWeekFrom(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Mostraremos solo espacios disponibles (L-V 1pm–7pm).
+                    </p>
+                  </div>
+
+                  <div className="flex items-end">
+                    <CustomButton
+                      variant="secondary"
+                      onClick={() => weekFrom && fetchAvailability(weekFrom)}
+                      disabled={!weekFrom || loadingSlots}
+                    >
+                      {loadingSlots ? "Cargando..." : "Ver disponibilidad"}
+                    </CustomButton>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Hora <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={form.time}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border px-3 py-2"
-                  />
+                {/* Slots disponibles */}
+                <div className="rounded-xl border bg-white/70 p-3">
+                  <p className="font-semibold mb-2">Elegí 3 opciones</p>
+
+                  {form.proposed_starts.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {form.proposed_starts.map((iso) => (
+                        <span
+                          key={iso}
+                          className="text-xs px-2 py-1 rounded-full bg-[#2f8f90]/10 text-[#1f6c6d] border border-[#2f8f90]/20"
+                        >
+                          {new Date(iso).toLocaleString()}
+                          <button
+                            type="button"
+                            className="ml-2 opacity-70 hover:opacity-100"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                proposed_starts: prev.proposed_starts.filter((x) => x !== iso),
+                              }))
+                            }
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {!weekFrom ? (
+                    <p className="text-sm text-muted-foreground">
+                      Seleccioná una semana para ver espacios disponibles.
+                    </p>
+                  ) : availableSlots.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {loadingSlots ? "Cargando..." : "No hay espacios disponibles en esta semana."}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {availableSlots.map((iso) => {
+                        const selected = form.proposed_starts.includes(iso)
+                        const disabled = !selected && form.proposed_starts.length >= 3
+                        return (
+                          <button
+                            key={iso}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => {
+                              setForm((prev) => {
+                                if (prev.proposed_starts.includes(iso)) return prev
+                                return { ...prev, proposed_starts: [...prev.proposed_starts, iso] }
+                              })
+                            }}
+                            className={[
+                              "rounded-lg border px-3 py-2 text-left text-sm bg-white hover:bg-gray-50 transition",
+                              selected ? "border-[#2f8f90] bg-[#2f8f90]/10" : "",
+                              disabled ? "opacity-50 cursor-not-allowed" : "",
+                            ].join(" ")}
+                          >
+                            {new Date(iso).toLocaleString()}
+                            <div className="text-xs text-muted-foreground">Duración: 1 hora</div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Debés elegir exactamente 3 opciones.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Duración</label>
-                  <select
-                    name="durationMin"
-                    value={form.durationMin}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border px-3 py-2"
-                  >
-                    <option value={30}>30 min</option>
-                    <option value={45}>45 min</option>
-                    <option value={60}>60 min</option>
-                    <option value={90}>90 min</option>
-                  </select>
-                </div>
 
                 <div>
                   <label className="text-sm font-medium text-slate-700">Consideraciones (opcional)</label>
@@ -722,7 +815,7 @@ const Appointments: React.FC = () => {
                   <CustomButton variant="ghost" type="button" onClick={closeModal}>
                     Cancelar
                   </CustomButton>
-                  <CustomButton variant="primary" type="submit" disabled={submitting}>
+                  <CustomButton variant="default" type="submit" disabled={submitting}>
                     {submitting ? "Guardando..." : "Guardar cita"}
                   </CustomButton>
                 </div>
@@ -819,17 +912,6 @@ const Appointments: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-slate-200 p-3">
-                    <p className="text-slate-500">Requested start</p>
-                    <p className="font-mono text-slate-900">{formatDT(selectedAppt.requested_start)}</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-3">
-                    <p className="text-slate-500">Requested end</p>
-                    <p className="font-mono text-slate-900">{formatDT(selectedAppt.requested_end)}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-slate-200 p-3">
                     <p className="text-slate-500">Scheduled start</p>
                     <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_start)}</p>
                   </div>
@@ -851,56 +933,111 @@ const Appointments: React.FC = () => {
                 </div>
               </div>
 
+              {isAdmin && selectedAppt?.status === "requested" && (
+              <div className="rounded-xl border bg-white/70 p-3">
+                <p className="font-semibold mb-2">Opciones propuestas por el paciente</p>
+
+                {(!selectedAppt.proposals || selectedAppt.proposals.length === 0) ? (
+                  <p className="text-sm text-muted-foreground">No hay opciones registradas.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedAppt.proposals.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between gap-3 border rounded-lg p-2 bg-white">
+                        <div className="text-sm">
+                          <div className="font-medium">Opción {p.rank}</div>
+                          <div className="text-muted-foreground">{new Date(p.start_at).toLocaleString()}</div>
+                        </div>
+
+                        <CustomButton
+                          variant="secondary"
+                          type="button"
+                          loading={confirmingProposalId === p.id}
+                          disabled={!!confirmingProposalId} // bloquea todos mientras confirma
+                          className="shadow-sm hover:shadow-md transition"
+                          onClick={async () => {
+                            try {
+                              setConfirmingProposalId(p.id)
+
+                              await apiFetch(`/api/appointments/${selectedAppt.id}/confirm`, {
+                                method: "POST",
+                                body: JSON.stringify({ proposal_id: p.id }),
+                              })
+
+                              setUiAlert({ type: "success", title: "Cita confirmada" })
+                              await fetchAppointments()
+                              closeDetail()
+                            } catch (e: any) {
+                              setUiAlert({ type: "error", title: "No se pudo confirmar", description: e?.message })
+                            } finally {
+                              setConfirmingProposalId(null)
+                            }
+                          }}
+                        >
+                          Confirmar esta
+                        </CustomButton>
+
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+
               <div className="mt-6 flex flex-wrap justify-end gap-3">
                 <CustomButton variant="ghost" type="button" onClick={closeDetail}>
                   Cerrar
                 </CustomButton>
 
                 {!isAdmin && (
-                  <CustomButton variant="primary" type="button" onClick={deleteAppointment}>
+                  <CustomButton variant="default" type="button" onClick={deleteAppointment}>
                     Borrar cita
                   </CustomButton>
                 )}
 
-                {isAdmin && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const base = selectedAppt.scheduled_start || selectedAppt.requested_start
-                        const d = base ? new Date(base) : new Date()
-                        const yyyy = d.getFullYear()
-                        const mm = String(d.getMonth() + 1).padStart(2, "0")
-                        const dd = String(d.getDate()).padStart(2, "0")
-                        const day = `${yyyy}-${mm}-${dd}`
+              {isAdmin && (
+                <>
+                  {/* Editar en agenda */}
+                  <CustomButton
+                    variant="secondary"
+                    type="button"
+                    onClick={() => {
+                      const base = selectedAppt.scheduled_start || selectedAppt.requested_start
+                      const d = base ? new Date(base) : new Date()
+                      const yyyy = d.getFullYear()
+                      const mm = String(d.getMonth() + 1).padStart(2, "0")
+                      const dd = String(d.getDate()).padStart(2, "0")
+                      const day = `${yyyy}-${mm}-${dd}`
 
-                        // Opcional: podrías agregar appointmentId si luego el Planner lo usa para abrir directo
-                        // navigate(`/planner?day=${day}&appointmentId=${selectedAppt.id}`)
-                        navigate(`/planner?day=${day}`)
-                        closeDetail()
-                      }}
-                      className="rounded-xl px-4 py-2 font-semibold text-white bg-slate-800 hover:bg-slate-900 transition"
-                    >
-                      Editar en agenda
-                    </button>
+                      navigate(`/planner?day=${day}`)
+                      closeDetail()
+                    }}
+                  >
+                    Editar en agenda
+                  </CustomButton>
 
-                    <button
-                      type="button"
-                      onClick={cancelAppointment}
-                      className="rounded-xl px-4 py-2 font-semibold text-white bg-red-600 hover:bg-red-700 transition"
-                    >
-                      Cancelar cita
-                    </button>
-
-                    <button
+                  {/* Confirmar cita (solo si no está en requested) */}
+                  {(selectedAppt.status || "").toLowerCase() !== "requested" && (
+                    <CustomButton
+                      variant="default"
                       type="button"
                       onClick={confirmAppointment}
-                      className="rounded-xl px-4 py-2 font-semibold text-white bg-green-600 hover:bg-green-700 transition"
                     >
                       Confirmar cita
-                    </button>
-                  </>
-                )}
+                    </CustomButton>
+                  )}
+
+                  {/* Cancelar cita */}
+                  <CustomButton
+                    variant="destructive"
+                    type="button"
+                    onClick={cancelAppointment}
+                  >
+                    Cancelar cita
+                  </CustomButton>
+                </>
+              )}
+
               </div>
             </div>
           </div>
