@@ -19,7 +19,7 @@ interface Appointment {
   paid_at?: string | null
   comment?: string | null
   considerations?: string | null
-  user?: { full_name: string } | null
+  user?: { full_name: string; phone?: string | null } | null
 
   proposals?: {
     id: string
@@ -628,6 +628,14 @@ const Appointments: React.FC = () => {
                   {isAdmin ? appt.user?.full_name ?? "Paciente" : user?.full_name ?? "Paciente"}
                 </h3>
 
+                {isAdmin && (
+                  <p className="text-xs text-slate-600">
+                    <span className="font-semibold">Tel:</span>{" "}
+                    {appt.user?.phone ? appt.user.phone : "—"}
+                  </p>
+                )}
+
+
                 <p className="text-sm text-gray-600 mb-2">{appt.description}</p>
 
                 <div className="text-sm text-gray-700 space-y-1">
@@ -789,7 +797,7 @@ const Appointments: React.FC = () => {
 
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Consideraciones (opcional)</label>
+                  <label className="text-sm font-medium text-slate-700">Describe tu caso</label>
                   <input
                     name="considerations"
                     value={form.considerations ?? ""}
@@ -800,7 +808,7 @@ const Appointments: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Comentario (opcional)</label>
+                  <label className="text-sm font-medium text-slate-700">¿Alguna condición o consideración adicional? (Opcional)</label>
                   <textarea
                     name="comment"
                     value={form.comment ?? ""}
@@ -854,6 +862,16 @@ const Appointments: React.FC = () => {
                     {selectedAppt.user?.full_name ?? user?.full_name ?? "Paciente"}
                   </p>
                 </div>
+
+                {isAdmin && (
+                  <div className="rounded-xl border border-slate-200 p-3">
+                  <p className="text-slate-500">Telefono</p>
+                  <p className="font-semibold text-slate-900">
+                  {selectedAppt.user?.phone ? selectedAppt.user.phone : "—"}
+                  </p>
+                </div>
+                  
+                )}
 
                 <div className="rounded-xl border border-slate-200 p-3">
                   <p className="text-slate-500">Descripción</p>
@@ -923,12 +941,12 @@ const Appointments: React.FC = () => {
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-slate-500">Consideraciones</p>
+                  <p className="text-slate-500">Descripcion del caso</p>
                   <p className="text-slate-900">{selectedAppt.considerations || "—"}</p>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-slate-500">Comentario</p>
+                  <p className="text-slate-500">Comentario adicional</p>
                   <p className="text-slate-900">{selectedAppt.comment || "—"}</p>
                 </div>
               </div>

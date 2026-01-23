@@ -1,3 +1,4 @@
+// src/pages/Login.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -17,6 +18,7 @@ export default function Login() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");   
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -37,9 +39,23 @@ export default function Login() {
       return;
     }
 
+    if (mode === "register") {
+      if (!fullName.trim()) {
+        setError("El nombre es obligatorio");
+        setLoading(false);
+        return;
+      }
+    
+      if (!phone.trim()) {
+        setError("El teléfono es obligatorio");
+        setLoading(false);
+        return;
+      }
+    }    
+
     try {
       if (mode === "register") {
-        await register(fullName, email, password);
+        await register(fullName, email, password, phone);
         setOk("Cuenta creada. Ahora iniciá sesión.");
         setMode("login");
         setPassword("");
@@ -96,6 +112,19 @@ export default function Login() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Ej: Nombre completo"
                   required
+                />
+              </div>
+            )}
+
+            {mode === "register" && (
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="0000 0000"
+                  required                   
                 />
               </div>
             )}

@@ -1,9 +1,11 @@
+// src/lib/auth.ts
 import { apiFetch, setToken, clearToken } from "./api";
 
 export type User = {
   id: string;
   full_name: string;
   email: string;
+  phone: string;
   role: "admin" | "user";
   is_active: boolean;
   created_at?: string;
@@ -28,13 +30,19 @@ export async function login(email: string, password: string): Promise<User> {
   return data.user;
 }
 
-export async function register(full_name: string, email: string, password: string) {
+export async function register(
+  full_name: string,
+  email: string,
+  password: string,
+  phone: string      
+) {
   const data = await apiFetch<{ message: string; user: User }>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ full_name, email, password }),
+    body: JSON.stringify({ full_name, email, password, phone }), 
   });
   return data.user;
 }
+
 
 
 export async function me(): Promise<User> {
@@ -43,10 +51,10 @@ export async function me(): Promise<User> {
   return data.user;
 }
 
-export async function updateMe(full_name: string, email: string): Promise<User> {
+export async function updateMe(full_name: string, email: string, phone: string): Promise<User> {
   const data = await apiFetch<{ message: string; user: User }>("/api/auth/me", {
     method: "PUT",
-    body: JSON.stringify({ full_name, email }),
+    body: JSON.stringify({ full_name, email, phone }),
   });
   localStorage.setItem("user", JSON.stringify(data.user));
   return data.user;

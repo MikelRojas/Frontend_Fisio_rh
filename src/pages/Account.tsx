@@ -1,3 +1,4 @@
+// src/pages/Account.tsx
 import React, { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export default function Account() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -27,9 +29,13 @@ export default function Account() {
   const canShowCard = !isLoading && !!user;
 
   const initial = useMemo(() => {
-    if (!user) return { fullName: "", email: "" };
-    return { fullName: user.full_name ?? "", email: user.email ?? "" };
-  }, [user]);
+    if (!user) return { fullName: "", email: "", phone: "" };
+    return {
+      fullName: user.full_name ?? "",
+      email: user.email ?? "",
+      phone: user.phone ?? "",
+    };
+  }, [user]);  
 
   function handleLogout() {
     logout();
@@ -41,6 +47,7 @@ export default function Account() {
     setMode("edit");
     setFullName(initial.fullName);
     setEmail(initial.email);
+    setPhone(initial.phone);
   }
 
   function openPassword() {
@@ -66,10 +73,15 @@ export default function Account() {
     if (!name) return setMsg({ type: "err", text: "El nombre es requerido." });
     if (!mail) return setMsg({ type: "err", text: "El email es requerido." });
     if (!/^\S+@\S+\.\S+$/.test(mail)) return setMsg({ type: "err", text: "Email inválido." });
+    const tel = phone.trim();
+    if (!tel) return setMsg({ type: "err", text: "El teléfono es requerido." });
+
+
+
 
     setSaving(true);
     try {
-      await updateMe(name, mail);
+      await updateMe(name, mail, phone);
       await refresh(); // refresca el user del contexto
       setMsg({ type: "ok", text: "Datos actualizados correctamente." });
       setMode("none");
@@ -131,6 +143,9 @@ export default function Account() {
             <p className="font-semibold">
               Email: <span className="font-normal">{user.email}</span>
             </p>
+            <p className="font-semibold">
+              Teléfono: <span className="font-normal">{user.phone}</span>
+            </p>
           </div>
 
           {/* Mensajito */}
@@ -189,6 +204,16 @@ export default function Account() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 8888 8888"
                 />
               </div>
 

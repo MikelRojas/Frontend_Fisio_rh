@@ -1,9 +1,11 @@
+// src/lib/users.ts
 import { apiFetch } from "./api"
 
 export type UserLite = {
   id: string
   full_name: string
   email: string
+  phone: string
   role: "admin" | "user"
   is_active: boolean
 }
