@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CustomButton from "../components/Buttom";
 import { useAuth } from "../lib/AuthContext";
 import {
@@ -7,8 +7,7 @@ import {
   getSiteLocation,
   updateSiteLocation,
 } from "../lib/site";
-import ChatbotWidget from "../components/ChatbotWidget";
-import CustomAlert from "@/components/Alert";
+import ChatbotWidget from "../components/ChatbotWidget"
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -17,50 +16,25 @@ const Home: React.FC = () => {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
 
-  // ✅ Custom alerts tipo toast
-  const [toast, setToast] = useState<null | {
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    description?: string;
-  }>(null);
-
-  const toastTimerRef = useRef<number | null>(null);
-
-  const showToast = (
-    type: "success" | "error" | "warning" | "info",
-    title: string,
-    description?: string
-  ) => {
-    setToast({ type, title, description });
-    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 3500);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    };
-  }, []);
-
   /* ---------------- GET AL CARGAR ---------------- */
   useEffect(() => {
     async function loadData() {
       try {
         const info = await getSiteInfo();
-        // ✅ backend devuelve { info: "..." }
-        setDescription(info.info ?? "");
+        console.log("RESPUESTA getSiteInfo():", info);
+        setDescription(info.info);
       } catch {
         setDescription(
-          "Bienvenidos! Fisioterapia RH ofrece el mejor servicio de la zona."
+          "Bienvenidos! Fisioterapia RH ofrece el mejor servicio de la zona"
         );
       }
 
       try {
         const loc = await getSiteLocation();
-        setLocation(loc.location ?? "");
+        setLocation(loc.location);
       } catch {
         setLocation(
-          "Hogar de Ancianos San Vicente de Paul, Ciudad Quesada, San Carlos"
+          "Hogar de Ancianos San Vicente de Paul, Ciudad Quesada"
         );
       }
     }
@@ -71,27 +45,27 @@ const Home: React.FC = () => {
   /* ---------------- UPDATES ADMIN ---------------- */
   const handleEditInfo = async () => {
     const text = prompt("Editar información:", description);
-    if (text === null) return;
+    if (!text) return;
 
     try {
       await updateSiteInfo(text);
       setDescription(text);
-      showToast("success", "Información actualizada");
-    } catch (e: any) {
-      showToast("error", "No se pudo actualizar", e?.message ?? "No autorizado");
+      alert("Información actualizada");
+    } catch {
+      alert("No autorizado");
     }
   };
 
   const handleEditLocation = async () => {
     const text = prompt("Editar ubicación:", location);
-    if (text === null) return;
+    if (!text) return;
 
     try {
       await updateSiteLocation(text);
       setLocation(text);
-      showToast("success", "Ubicación actualizada");
-    } catch (e: any) {
-      showToast("error", "No se pudo actualizar", e?.message ?? "No autorizado");
+      alert("Ubicación actualizada");
+    } catch {
+      alert("No autorizado");
     }
   };
 
@@ -103,24 +77,13 @@ const Home: React.FC = () => {
     location
   )}`;
 
+  console.log("RENDER HOME — description:", description);
+
   return (
     <div
       className="min-h-screen font-sans"
       style={{ backgroundColor: "rgba(62, 184, 185, 0.25)" }}
     >
-      {/* ✅ Toast */}
-      {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[min(92vw,680px)]">
-          <CustomAlert
-            type={toast.type}
-            title={toast.title}
-            description={toast.description}
-            onClose={() => setToast(null)}
-            className="shadow-lg"
-          />
-        </div>
-      )}
-
       {/* ---------------- HERO ---------------- */}
       <section className="mx-auto max-w-[1280px] px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <div>
@@ -187,17 +150,20 @@ const Home: React.FC = () => {
           <p className="font-medium">
             Horario: Lunes a viernes de 1:00 pm a 7:00 pm
           </p>
-          <h2 className="text-xl font-extrabold mb-2">Preguntas Frecuentes</h2>
-          <p className="font-medium max-w-xl mx-auto">
-            Si tienes dudas sobre nuestros servicios, nuestro asistente virtual puede ayudarte.
-          </p>
+          <h2 className="text-xl font-extrabold mb-2"> Preguntas Frecuentes 
+            </h2>
+             <p className="font-medium"> 
+              </p> 
+              <p className="font-medium max-w-xl mx-auto"> Si tienes dudas sobre nuestros servicios, nuestro asistente virtual puede ayudarte. </p>
         </div>
 
         {/* CONTACTO */}
         <div className="text-gray-900">
           <h2 className="text-xl font-extrabold mb-2">Contáctanos</h2>
           <p className="font-medium">Teléfono: +506 8888-8888</p>
-          <p className="font-medium">Correo: contacto@fisioterapiarh.cr</p>
+          <p className="font-medium">
+            Correo: contacto@fisioterapiarh.cr
+          </p>
         </div>
       </section>
 
@@ -208,3 +174,4 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
