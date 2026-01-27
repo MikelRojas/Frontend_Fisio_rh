@@ -26,8 +26,6 @@ export default function Account() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const canShowCard = !isLoading && !!user;
-
   const initial = useMemo(() => {
     if (!user) return { fullName: "", email: "", phone: "" };
     return {
