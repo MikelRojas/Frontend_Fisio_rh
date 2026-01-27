@@ -352,19 +352,6 @@ const Home: React.FC = () => {
                       <CardContent className="p-6 md:p-8 flex flex-col justify-center gap-3">
                         <h3 className="text-2xl font-extrabold text-gray-900">{s.title}</h3>
                         <p className="text-gray-700 font-medium leading-relaxed">{s.desc}</p>
-
-                        <div className="pt-2 flex flex-wrap gap-2">
-                          <Button asChild className="rounded-xl">
-                            <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                              Consultar por WhatsApp
-                            </a>
-                          </Button>
-                          <Button asChild variant="outline" className="rounded-xl">
-                            <a href={mapsRedirectUrl} target="_blank" rel="noopener noreferrer">
-                              Llegar al consultorio
-                            </a>
-                          </Button>
-                        </div>
                       </CardContent>
                     </div>
                   </Card>
@@ -428,19 +415,6 @@ const Home: React.FC = () => {
 
       {/* ================= CHATBOT ================= */}
       <ChatbotWidget />
-
-      {/* Botón flotante WhatsApp (extra pedido por cliente) */}
-      <a
-        href={whatsappHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50"
-        aria-label="Abrir WhatsApp"
-      >
-        <div className="rounded-full shadow-lg border bg-white hover:bg-gray-50 transition p-3">
-          <MessageCircle className="h-7 w-7" />
-        </div>
-      </a>
     </div>
   );
 };

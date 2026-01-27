@@ -1,12 +1,8 @@
-// npx shadcn@latest add navigation-menu
-
 import React from "react"
-import { NavLink } from "react-router-dom"
-import { Link } from "react-router-dom"
+import { NavLink, Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/AuthContext"
-import { User } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { User, ChevronDown, Menu } from "lucide-react"
 
 import {
   NavigationMenu,
@@ -19,14 +15,9 @@ import {
   NavigationMenuIndicator,
 } from "@/components/ui/navigation-menu"
 
-import {navigationMenuTriggerStyle} from "@/components/ui/navigation-menu.styles"
-
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { ChevronDown, Menu } from "lucide-react"
-
-// ----------------------------------------------
-// TYPES
-// ----------------------------------------------
+import { navigationMenuTriggerStyle } from "@/components/ui/navigation-menu.styles"
 
 export type NavItem = {
   id: string
@@ -37,19 +28,12 @@ export type NavItem = {
   className?: string
 }
 
-export interface CustomNavbarProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface CustomNavbarProps extends React.HTMLAttributes<HTMLDivElement> {
   items: NavItem[]
   collapsibleOnMobile?: boolean
   mobileTriggerIcon?: React.ReactNode
-  navigationMenuProps?: Partial<
-    React.ComponentProps<typeof NavigationMenu>
-  >
+  navigationMenuProps?: Partial<React.ComponentProps<typeof NavigationMenu>>
 }
-
-// ----------------------------------------------
-// NAVBAR COMPONENT
-// ----------------------------------------------
 
 const CustomNavbar: React.FC<CustomNavbarProps> = ({
   items,
@@ -65,86 +49,146 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
     <nav
       role="navigation"
       aria-label="Main navigation"
-      className={cn(
-        "relative z-40 border-b bg-background/80 backdrop-blur-sm",
-        className
-      )}
+      className={cn("relative z-40 border-b bg-background/80 backdrop-blur-sm", className)}
       {...rootProps}
     >
       <div className="mx-auto max-w-[1280px] px-4 py-3 flex items-center justify-between gap-4">
-        {/* ---------- MOBILE BUTTON (placeholder) ---------- */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          {/* ✅ MOBILE MENU */}
           {collapsibleOnMobile && (
-            <button
-              className="md:hidden mr-4 p-2 rounded-md hover:bg-muted/20"
-              onClick={() => console.log("TODO: implementar menú mobile")}
-            >
-              {mobileIcon}
-            </button>
-          )}
-        {/* ---------- MAIN NAVIGATION ---------- */}
-        <NavigationMenu
-          {...navigationMenuProps}
-          className={cn(
-            "hidden md:block",
-            navigationMenuProps?.className
-          )}
-        >
-          <NavigationMenuList className="flex items-center gap-1">
-            {items.map((item) => {
-              const hasDropdown = Boolean(item.content)
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="md:hidden p-2 rounded-md hover:bg-muted/20" aria-label="Abrir menú">
+                  {mobileIcon}
+                </button>
+              </SheetTrigger>
 
-              // ---------------- LINK NORMAL ----------------
-              if (!hasDropdown) {
+              <SheetContent
+                side="left"
+                className="w-[320px] p-0 flex flex-col"
+              >
+                {/* Header */}
+                <div className="px-5 py-4 border-b flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">Menú</span>
+                    <span className="text-xs text-muted-foreground">Navegación</span>
+                  </div>
+                  {/* El X ya lo pone shadcn, esto es opcional */}
+                </div>
+
+                {/* Links */}
+                <div className="px-3 py-3 flex-1">
+                  <nav className="flex flex-col gap-1">
+                    {items.map((item) => {
+                      const hasDropdown = Boolean(item.content)
+
+                      // Si tiene dropdown, en mobile mejor tratarlo como sección simple
+                      if (hasDropdown) {
+                        return (
+                          <div key={item.id} className="mt-2">
+                            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                              {item.title}
+                            </div>
+                            <div className="pl-2">{item.content}</div>
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <SheetClose asChild key={item.id}>
+                          <NavLink
+                            to={item.href ?? "/"}
+                            className={({ isActive }) =>
+                              cn(
+                                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+                                "hover:bg-muted/50",
+                                isActive && "bg-muted font-semibold"
+                              )
+                            }
+                          >
+                            <span className="h-8 w-8 rounded-lg bg-muted/60 grid place-items-center group-hover:bg-muted transition">
+                              {item.icon ?? <span className="text-xs">•</span>}
+                            </span>
+
+                            <span className="flex-1">{item.title}</span>
+
+                            <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition">
+                              ↵
+                            </span>
+                          </NavLink>
+                        </SheetClose>
+                      )
+                    })}
+                  </nav>
+                </div>
+
+                {/* Footer (opcional): acciones como login/logout */}
+                <div className="border-t px-5 py-4">
+                  <div className="text-xs text-muted-foreground">
+                    Fisioterapia RH
+                  </div>
+                </div>
+              </SheetContent>
+
+            </Sheet>
+          )}
+
+          {/* ✅ DESKTOP MENU */}
+          <NavigationMenu
+            {...navigationMenuProps}
+            className={cn("hidden md:block", navigationMenuProps?.className)}
+          >
+            <NavigationMenuList className="flex items-center gap-1">
+              {items.map((item) => {
+                const hasDropdown = Boolean(item.content)
+
+                if (!hasDropdown) {
+                  return (
+                    <NavigationMenuItem key={item.id} className={item.className}>
+                      <NavigationMenuLink asChild>
+                        <NavLink
+                          to={item.href ?? "/"}
+                          className={({ isActive }) =>
+                            cn(
+                              navigationMenuTriggerStyle(),
+                              "transition-colors",
+                              isActive && "bg-muted text-primary font-semibold"
+                            )
+                          }
+                        >
+                          <div className="flex items-center gap-2">
+                            {item.icon}
+                            {item.title}
+                          </div>
+                        </NavLink>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  )
+                }
+
                 return (
                   <NavigationMenuItem key={item.id} className={item.className}>
-                    <NavigationMenuLink asChild>
-                      <NavLink
-                        to={item.href ?? "/"}
-                        className={({ isActive }) =>
-                          cn(
-                            navigationMenuTriggerStyle(),
-                            "transition-colors",
-                            isActive &&
-                              "bg-muted text-primary font-semibold"
-                          )
-                        }
-                      >
-                        <div className="flex items-center gap-2">
-                          {item.icon}
-                          {item.title}
-                        </div>
-                      </NavLink>
-                    </NavigationMenuLink>
+                    <NavigationMenuTrigger>
+                      <div className="flex items-center gap-2">
+                        {item.icon}
+                        {item.title}
+                        <ChevronDown className="h-4 w-4 opacity-70" />
+                      </div>
+                    </NavigationMenuTrigger>
+
+                    <NavigationMenuContent className="w-[300px] p-2">
+                      {item.content}
+                    </NavigationMenuContent>
                   </NavigationMenuItem>
                 )
-              }
+              })}
+            </NavigationMenuList>
 
-              // ---------------- DROPDOWN ----------------
-              return (
-                <NavigationMenuItem key={item.id} className={item.className}>
-                  <NavigationMenuTrigger>
-                    <div className="flex items-center gap-2">
-                      {item.icon}
-                      {item.title}
-                      <ChevronDown className="h-4 w-4 opacity-70" />
-                    </div>
-                  </NavigationMenuTrigger>
-
-                  <NavigationMenuContent className="w-[300px] p-2">
-                    {item.content}
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              )
-            })}
-          </NavigationMenuList>
-
-          <NavigationMenuIndicator />
-          <NavigationMenuViewport />
-        </NavigationMenu>
+            <NavigationMenuIndicator />
+            <NavigationMenuViewport />
+          </NavigationMenu>
         </div>
 
-        {/* RIGHT: login or account icon */}
         <NavActions />
       </div>
     </nav>
@@ -167,7 +211,7 @@ function NavActions() {
 
   function handleLogout() {
     logout()
-    navigate("/") // ✅ redirige a Home
+    navigate("/")
   }
 
   return (
@@ -184,15 +228,7 @@ function NavActions() {
         <User className="h-5 w-5" />
       </Link>
 
-      <Button
-        onClick={handleLogout}
-        className="
-          bg-[#2f8f90]
-          hover:bg-[#277a7b]
-          text-white
-          font-semibold
-        "
-      >
+      <Button onClick={handleLogout} className="bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold">
         Salir
       </Button>
     </div>
