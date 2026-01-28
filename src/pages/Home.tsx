@@ -397,13 +397,13 @@ const Home: React.FC = () => {
 
           <div className="flex flex-wrap gap-3 items-center">
             <Button asChild variant="outline" className="rounded-xl">
-              <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.facebook.com/lenismarcela.rojashurtado" target="_blank" rel="noopener noreferrer">
                 Facebook <ExternalLink className="ml-2 h-4 w-4" />
               </a>
             </Button>
 
             <Button asChild variant="outline" className="rounded-xl">
-              <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.instagram.com/lenismrh" target="_blank" rel="noopener noreferrer">
                 Instagram <ExternalLink className="ml-2 h-4 w-4" />
               </a>
             </Button>
