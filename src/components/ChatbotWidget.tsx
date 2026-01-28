@@ -42,7 +42,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   persistKey,
 }) => {
   const baseUrl = useMemo(() => {
-    return apiBaseUrl || import.meta.env.VITE_API_URL || "http://localhost:5000"
+    return apiBaseUrl || import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000"
   }, [apiBaseUrl])
 
   const [open, setOpen] = useState(false)
@@ -154,15 +154,21 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div>
-            <CustomButton
-              size="icon"
-              variant="outline"
-              className="rounded-full shadow-lg hover:scale-105 transition"
-              aria-label="Abrir chatbot"
-              title="Chatbot"
-            >
-              🤖
-            </CustomButton>
+          <CustomButton
+            size="icon"
+            variant="outline"
+            className="
+              rounded-full
+              shadow-lg
+              hover:scale-105
+              transition
+              h-15 w-15 text-2xl
+            "
+            aria-label="Abrir chatbot"
+            title="Chatbot"
+          >
+            🤖
+          </CustomButton>
           </div>
         </PopoverTrigger>
 

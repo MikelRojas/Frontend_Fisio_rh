@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator";
 // icons
 import { MapPin, Clock, Mail, Phone, ExternalLink, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+
 const Home: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -414,7 +416,7 @@ const Home: React.FC = () => {
       </footer>
 
       {/* ================= CHATBOT ================= */}
-      <ChatbotWidget />
+      <ChatbotWidget apiBaseUrl={API_URL}/>
     </div>
   );
 };
