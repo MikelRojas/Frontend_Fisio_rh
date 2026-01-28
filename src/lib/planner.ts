@@ -72,7 +72,6 @@ export type UserMini = { id: string; full_name: string; email: string }
 
 export async function listUsers() {
   const res = await apiFetch<UserMini[]>(`/api/users/`)
-  console.log("users from api:", res)
   return Array.isArray(res) ? res : []
 }
 

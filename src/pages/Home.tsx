@@ -27,7 +27,6 @@ const Home: React.FC = () => {
     async function loadData() {
       try {
         const info = await getSiteInfo();
-        console.log("RESPUESTA getSiteInfo():", info);
         setDescription(info.info);
       } catch {
         setDescription("Bienvenidos! Fisioterapia RH ofrece el mejor servicio de la zona");
