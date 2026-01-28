@@ -165,24 +165,28 @@ const Home: React.FC = () => {
         </div>
 
         <div className="flex justify-end">
-          <Card className="rounded-2xl overflow-hidden shadow-lg w-full max-w-[560px]">
-            <div className="relative">
-              <img
-                src="/images/fisioterapia.jpg"
-                alt="Fisioterapia"
-                className="w-full h-[320px] object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="rounded-xl bg-white/85 backdrop-blur px-4 py-3 border shadow-sm">
-                  <p className="font-semibold text-gray-900">Recuperación • Prevención • Bienestar</p>
-                  <p className="text-sm text-gray-700">
-                    Tratamientos basados en evaluación y objetivos reales del paciente.
-                  </p>
-                </div>
+        <Card className="rounded-2xl overflow-hidden shadow-lg w-full max-w-[560px] p-0">
+          <div className="relative aspect-[16/9] w-full">
+            <img
+              src="/images/fisioterapia.jpg"
+              alt="Fisioterapia"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+
+            <div className="absolute bottom-4 left-4 right-4">
+              <div className="rounded-xl bg-white/90 backdrop-blur-md px-4 py-3 border shadow-md">
+                <p className="font-semibold text-gray-900">
+                  Recuperación • Prevención • Bienestar
+                </p>
+                <p className="text-sm text-gray-700">
+                  Tratamientos basados en evaluación y objetivos reales del paciente.
+                </p>
               </div>
             </div>
-          </Card>
+          </div>
+        </Card>
         </div>
       </section>
 
