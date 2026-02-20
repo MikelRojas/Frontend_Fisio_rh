@@ -6,6 +6,8 @@ export type User = {
   full_name: string;
   email: string;
   phone: string;
+  direccion: string | null; 
+  cedula: string | null;      
   role: "admin" | "user";
   is_active: boolean;
   created_at?: string;
@@ -34,12 +36,22 @@ export async function register(
   full_name: string,
   email: string,
   password: string,
-  phone: string      
+  phone: string,
+  direccion: string,     
+  cedula: string         
 ) {
   const data = await apiFetch<{ message: string; user: User }>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ full_name, email, password, phone }), 
+    body: JSON.stringify({
+      full_name,
+      email,
+      password,
+      phone,
+      direccion,
+      cedula,
+    }),
   });
+
   return data.user;
 }
 
@@ -51,11 +63,24 @@ export async function me(): Promise<User> {
   return data.user;
 }
 
-export async function updateMe(full_name: string, email: string, phone: string): Promise<User> {
+export async function updateMe(
+  full_name: string,
+  email: string,
+  phone: string,
+  direccion: string,   
+  cedula: string       
+): Promise<User> {
   const data = await apiFetch<{ message: string; user: User }>("/api/auth/me", {
     method: "PUT",
-    body: JSON.stringify({ full_name, email, phone }),
+    body: JSON.stringify({
+      full_name,
+      email,
+      phone,
+      direccion,
+      cedula,
+    }),
   });
+
   localStorage.setItem("user", JSON.stringify(data.user));
   return data.user;
 }

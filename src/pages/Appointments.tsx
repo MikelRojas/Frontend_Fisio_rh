@@ -52,6 +52,11 @@ type FilterKey = "all" | "requested" | "unpaid" | "paid" | "cancelled"
 
 const Appointments: React.FC = () => {
   const navigate = useNavigate()
+  const statusColors = {
+    requested: "bg-amber-100 text-amber-700",
+    confirmed: "bg-teal-100 text-teal-700",
+    cancelled: "bg-rose-100 text-rose-700",
+  }
 
   const user = useMemo(() => getCachedUser(), [])
   const isLoggedIn = !!user
@@ -474,8 +479,8 @@ const Appointments: React.FC = () => {
   }, [appointments, filter, filterDate, isAdmin, searchName])
 
   return (
-    <div className="min-h-screen font-sans" style={{ backgroundColor: "rgba(62, 184, 185, 0.25)" }}>
-      <section className="mx-auto max-w-[1280px] px-6 py-12 grid grid-cols-1 md:grid-cols-[1fr_1px_3fr] gap-8">
+    <section className="space-y-10">
+      <section className="grid grid-cols-1 md:grid-cols-[280px_1px_1fr] gap-10">
         {/* LEFT */}
         <div className="space-y-6">
           {/* ALERT GLOBAL */}
@@ -491,9 +496,9 @@ const Appointments: React.FC = () => {
 
           {/* BLOQUE 1: Nueva cita (solo USER) */}
           {!isAdmin && (
-            <div className="bg-white rounded-xl shadow-md p-6 sticky top-6">
-              <h2 className="text-xl font-extrabold text-gray-900 mb-1">Nueva cita</h2>
-              <p className="text-sm text-gray-600 mb-4">Agenda una nueva cita de forma rápida y sencilla.</p>
+            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 sticky top-6">
+              <h2 className="text-xl font-extrabold text-slate-900 mb-1">Nueva cita</h2>
+              <p className="text-sm text-slate-600 mb-4">Agenda una nueva cita de forma rápida y sencilla.</p>
 
               {!isLoggedIn && (
                 <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -516,8 +521,8 @@ const Appointments: React.FC = () => {
           )}
 
           {/* BLOQUE 2: Filtros */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-extrabold text-gray-900 mb-3">Filtros</h3>
+          <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6">
+            <h3 className="text-lg font-extrabold text-slate-900 mb-3">Filtros</h3>
 
             <div className="space-y-2 mb-4">
               <label className="text-sm font-semibold text-slate-800">Filtrar por fecha</label>
@@ -525,7 +530,7 @@ const Appointments: React.FC = () => {
                 type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 px-3 py-2 outline-none transition"
               />
             </div>
 
@@ -537,7 +542,7 @@ const Appointments: React.FC = () => {
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
                   placeholder="Ej: Andrea"
-                  className="w-full rounded-xl border px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 px-3 py-2 outline-none transition"
                 />
               </div>
             )}
@@ -594,26 +599,26 @@ const Appointments: React.FC = () => {
 
         {/* DIVIDER */}
         <div className="hidden md:flex justify-center">
-          <div className="w-px h-[70%] bg-gray-300/60 rounded-full self-center" />
+          <div className="w-px h-[70%] bg-slate-200 rounded-full self-center" />
         </div>
 
         {/* RIGHT */}
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Citas programadas</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-2">Citas programadas</h1>
 
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="text-sm text-slate-600 mb-6">
             {isLoggedIn ? (isAdmin ? "Viendo todas las citas (Admin)." : "Viendo tus citas.") : "Inicia sesión para ver tus citas."}
           </p>
 
-          {loading && <div className="bg-white rounded-xl shadow-md p-6 text-gray-600">Cargando citas...</div>}
+          {loading && <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 text-slate-600">Cargando citas...</div>}
 
           {!loading && isLoggedIn && filteredAppointments.length === 0 && (
-            <div className="bg-white rounded-xl shadow-md p-10 text-center text-gray-600">No hay citas</div>
+            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-10 text-center text-slate-600">No hay citas</div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAppointments.map((appt) => (
-              <div key={appt.id} className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition relative">
+              <div key={appt.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-all duration-200 relative">
                 <button
                   type="button"
                   onClick={() => openDetail(appt)}
@@ -624,21 +629,24 @@ const Appointments: React.FC = () => {
                   📝
                 </button>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                <h3 className="text-lg font-bold text-slate-900 mb-1">
                   {isAdmin ? appt.user?.full_name ?? "Paciente" : user?.full_name ?? "Paciente"}
                 </h3>
 
                 {isAdmin && (
-                  <p className="text-xs text-slate-600">
-                    <span className="font-semibold">Tel:</span>{" "}
-                    {appt.user?.phone ? appt.user.phone : "—"}
-                  </p>
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      statusColors[(appt.status || "").toLowerCase() as keyof typeof statusColors] || "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {appt.status}
+                  </span>
                 )}
 
 
-                <p className="text-sm text-gray-600 mb-2">{appt.description}</p>
+                <p className="text-sm text-slate-600 mb-2">{appt.description}</p>
 
-                <div className="text-sm text-gray-700 space-y-1">
+                <div className="text-sm text-slate-700 space-y-1">
                   - 
                   <p>
                     <span className="font-semibold">Fecha:</span>{" "}
@@ -669,9 +677,9 @@ const Appointments: React.FC = () => {
         {/* MODAL: Crear cita (solo USER) */}
         {!isAdmin && isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={closeModal} />
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} />
 
-            <div className="relative z-10 w-[95%] max-w-xl rounded-2xl bg-white p-6 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="relative z-10 w-[95%] max-w-xl rounded-2xl bg-white border border-slate-200 shadow-sm p-6 shadow-xl max-h-[85vh] overflow-y-auto">
               <h2 className="text-xl font-semibold mb-4">Crear cita</h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -693,7 +701,7 @@ const Appointments: React.FC = () => {
                     value={form.description}
                     onChange={handleChange}
                     placeholder="Descripción"
-                    className="w-full rounded-xl border px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 px-3 py-2 outline-none transition"
                   />
                 </div>
 
@@ -703,7 +711,7 @@ const Appointments: React.FC = () => {
                     <label className="text-sm font-semibold">Semana (lunes recomendado)</label>
                     <input
                       type="date"
-                      className="w-full rounded-lg border px-3 py-2 bg-white"
+                      className="w-full rounded-lg border px-3 py-2 bg-white border border-slate-200 shadow-sm"
                       value={weekFrom}
                       onChange={(e) => setWeekFrom(e.target.value)}
                     />
@@ -724,7 +732,7 @@ const Appointments: React.FC = () => {
                 </div>
 
                 {/* Slots disponibles */}
-                <div className="rounded-xl border bg-white/70 p-3">
+                <div className="rounded-xl border bg-white border border-slate-200 shadow-sm/70 p-3">
                   <p className="font-semibold mb-2">Elegí 3 opciones</p>
 
                   {form.proposed_starts.length > 0 && (
@@ -777,7 +785,7 @@ const Appointments: React.FC = () => {
                               })
                             }}
                             className={[
-                              "rounded-lg border px-3 py-2 text-left text-sm bg-white hover:bg-gray-50 transition",
+                              "rounded-lg border px-3 py-2 text-left text-sm bg-white border border-slate-200 shadow-sm hover:bg-slate-50 transition",
                               selected ? "border-[#2f8f90] bg-[#2f8f90]/10" : "",
                               disabled ? "opacity-50 cursor-not-allowed" : "",
                             ].join(" ")}
@@ -803,7 +811,7 @@ const Appointments: React.FC = () => {
                     value={form.considerations ?? ""}
                     onChange={handleChange}
                     placeholder="Consideraciones"
-                    className="w-full rounded-xl border px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 px-3 py-2 outline-none transition"
                   />
                 </div>
 
@@ -814,7 +822,7 @@ const Appointments: React.FC = () => {
                     value={form.comment ?? ""}
                     onChange={handleChange}
                     placeholder="Comentario"
-                    className="w-full rounded-xl border px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-100 px-3 py-2 outline-none transition"
                     rows={3}
                   />
                 </div>
@@ -835,9 +843,9 @@ const Appointments: React.FC = () => {
         {/* MODAL: Detalle (Admin/User) */}
         {isDetailOpen && selectedAppt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-black/50" onClick={closeDetail} />
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeDetail} />
 
-            <div className="relative z-10 w-[95%] max-w-xl rounded-2xl bg-white p-6 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="relative z-10 w-[95%] max-w-xl rounded-2xl bg-white border border-slate-200 shadow-sm p-6 shadow-xl max-h-[85vh] overflow-y-auto">
               <button
                 type="button"
                 onClick={closeDetail}
@@ -901,7 +909,7 @@ const Appointments: React.FC = () => {
                           disabled={updatingPaid || (selectedAppt.status || "").toLowerCase() === "cancelled"}
                           onClick={() => togglePaid(!paidSwitch)}
                           className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
-                            paidSwitch ? "bg-green-600" : "bg-slate-300"
+                            paidSwitch ? "bg-teal-600" : "bg-slate-300"
                           } ${
                             updatingPaid || (selectedAppt.status || "").toLowerCase() === "cancelled"
                               ? "opacity-60 cursor-not-allowed"
@@ -916,7 +924,7 @@ const Appointments: React.FC = () => {
                           }
                         >
                           <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white border border-slate-200 shadow-sm transition ${
                               paidSwitch ? "translate-x-6" : "translate-x-1"
                             }`}
                           />
@@ -930,12 +938,12 @@ const Appointments: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-slate-200 p-3">
-                    <p className="text-slate-500">Scheduled start</p>
+                    <p className="text-slate-500">Hora de inicio</p>
                     <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_start)}</p>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 p-3">
-                    <p className="text-slate-500">Scheduled end</p>
+                    <p className="text-slate-500">Hora de finalización</p>
                     <p className="font-mono text-slate-900">{formatDT(selectedAppt.scheduled_end)}</p>
                   </div>
                 </div>
@@ -952,7 +960,7 @@ const Appointments: React.FC = () => {
               </div>
 
               {isAdmin && selectedAppt?.status === "requested" && (
-              <div className="rounded-xl border bg-white/70 p-3">
+              <div className="rounded-xl border bg-white border border-slate-200 shadow-sm/70 p-3">
                 <p className="font-semibold mb-2">Opciones propuestas por el paciente</p>
 
                 {(!selectedAppt.proposals || selectedAppt.proposals.length === 0) ? (
@@ -960,7 +968,7 @@ const Appointments: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     {selectedAppt.proposals.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between gap-3 border rounded-lg p-2 bg-white">
+                      <div key={p.id} className="flex items-center justify-between gap-3 border rounded-lg p-2 bg-white border border-slate-200 shadow-sm">
                         <div className="text-sm">
                           <div className="font-medium">Opción {p.rank}</div>
                           <div className="text-muted-foreground">{new Date(p.start_at).toLocaleString()}</div>
@@ -971,7 +979,7 @@ const Appointments: React.FC = () => {
                           type="button"
                           loading={confirmingProposalId === p.id}
                           disabled={!!confirmingProposalId} // bloquea todos mientras confirma
-                          className="shadow-sm hover:shadow-md transition"
+                          className="shadow-sm hover transition"
                           onClick={async () => {
                             try {
                               setConfirmingProposalId(p.id)
@@ -1061,7 +1069,7 @@ const Appointments: React.FC = () => {
           </div>
         )}
       </section>
-    </div>
+    </section>
   )
 }
 

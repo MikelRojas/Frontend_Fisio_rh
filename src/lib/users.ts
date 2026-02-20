@@ -6,6 +6,8 @@ export type UserLite = {
   full_name: string
   email: string
   phone: string
+  direccion: string | null    
+  cedula: string | null       
   role: "admin" | "user"
   is_active: boolean
 }

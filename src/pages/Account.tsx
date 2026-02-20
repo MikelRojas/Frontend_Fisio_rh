@@ -1,301 +1,309 @@
-// src/pages/Account.tsx
-import React, { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/lib/AuthContext";
-import { changeMyPassword, updateMe } from "@/lib/auth";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useAuth } from "@/lib/AuthContext"
+import { changeMyPassword, updateMe } from "@/lib/auth"
+import { useNavigate } from "react-router-dom"
 
-type Mode = "none" | "edit" | "password";
+type Mode = "none" | "edit" | "password"
 
 export default function Account() {
-  const { user, logout, isLoading, refresh } = useAuth();
-  const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("none");
+  const { user, logout, isLoading, refresh } = useAuth()
+  const navigate = useNavigate()
+  const [mode, setMode] = useState<Mode>("none")
 
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [direccion, setDireccion] = useState("")
+  const [cedula, setCedula] = useState("")
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
 
   const initial = useMemo(() => {
-    if (!user) return { fullName: "", email: "", phone: "" };
+    if (!user)
+      return {
+        fullName: "",
+        email: "",
+        phone: "",
+        direccion: "",
+        cedula: "",
+      }
+
     return {
       fullName: user.full_name ?? "",
       email: user.email ?? "",
       phone: user.phone ?? "",
-    };
-  }, [user]);  
+      direccion: user.direccion ?? "",
+      cedula: user.cedula ?? "",
+    }
+  }, [user])
 
   function handleLogout() {
-    logout();
-    navigate("/", { replace: true });
+    logout()
+    navigate("/", { replace: true })
   }
 
   function openEdit() {
-    setMsg(null);
-    setMode("edit");
-    setFullName(initial.fullName);
-    setEmail(initial.email);
-    setPhone(initial.phone);
+    setMsg(null)
+    setMode("edit")
+    setFullName(initial.fullName)
+    setEmail(initial.email)
+    setPhone(initial.phone)
+    setDireccion(initial.direccion)
+    setCedula(initial.cedula)
   }
 
   function openPassword() {
-    setMsg(null);
-    setMode("password");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    setMsg(null)
+    setMode("password")
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
   }
 
   function closeForms() {
-    setMode("none");
-    setMsg(null);
+    setMode("none")
+    setMsg(null)
   }
 
   async function handleSaveProfile(e: React.FormEvent) {
-    e.preventDefault();
-    setMsg(null);
+    e.preventDefault()
+    setMsg(null)
 
-    const name = fullName.trim();
-    const mail = email.trim().toLowerCase();
+    if (!fullName.trim()) return setMsg({ type: "err", text: "El nombre es requerido." })
+    if (!email.trim()) return setMsg({ type: "err", text: "El email es requerido." })
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setMsg({ type: "err", text: "Email inválido." })
+    if (!phone.trim()) return setMsg({ type: "err", text: "El teléfono es requerido." })
+    if (!direccion.trim()) return setMsg({ type: "err", text: "La dirección es requerida." })
+    if (!cedula.trim()) return setMsg({ type: "err", text: "La cédula es requerida." })
 
-    if (!name) return setMsg({ type: "err", text: "El nombre es requerido." });
-    if (!mail) return setMsg({ type: "err", text: "El email es requerido." });
-    if (!/^\S+@\S+\.\S+$/.test(mail)) return setMsg({ type: "err", text: "Email inválido." });
-    const tel = phone.trim();
-    if (!tel) return setMsg({ type: "err", text: "El teléfono es requerido." });
-
-
-
-
-    setSaving(true);
+    setSaving(true)
     try {
-      await updateMe(name, mail, phone);
-      await refresh(); // refresca el user del contexto
-      setMsg({ type: "ok", text: "Datos actualizados correctamente." });
-      setMode("none");
+      await updateMe(fullName, email.toLowerCase(), phone, direccion, cedula)
+      await refresh()
+      setMsg({ type: "ok", text: "Datos actualizados correctamente." })
+      setMode("none")
     } catch (err: any) {
-      setMsg({ type: "err", text: err?.message ?? "No se pudo actualizar." });
+      setMsg({ type: "err", text: err?.message ?? "No se pudo actualizar." })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
   async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setMsg(null);
+    e.preventDefault()
+    setMsg(null)
 
-    if (!currentPassword) return setMsg({ type: "err", text: "La contraseña actual es requerida." });
-    if (!newPassword) return setMsg({ type: "err", text: "La nueva contraseña es requerida." });
-    if (!confirmPassword) return setMsg({ type: "err", text: "Confirmá la nueva contraseña." });
-
+    if (!currentPassword) return setMsg({ type: "err", text: "La contraseña actual es requerida." })
+    if (!newPassword) return setMsg({ type: "err", text: "La nueva contraseña es requerida." })
+    if (!confirmPassword) return setMsg({ type: "err", text: "Confirmá la nueva contraseña." })
     if (newPassword.length < 8)
-      return setMsg({ type: "err", text: "La nueva contraseña debe tener al menos 8 caracteres." });
-
-    if (newPassword === currentPassword)
-      return setMsg({ type: "err", text: "La nueva contraseña no puede ser igual a la actual." });
-
+      return setMsg({ type: "err", text: "Debe tener al menos 8 caracteres." })
     if (newPassword !== confirmPassword)
-      return setMsg({ type: "err", text: "La confirmación no coincide." });
+      return setMsg({ type: "err", text: "Las contraseñas no coinciden." })
 
-    setSaving(true);
+    setSaving(true)
     try {
-      await changeMyPassword(currentPassword, newPassword);
-      setMsg({ type: "ok", text: "Contraseña actualizada correctamente." });
-      setMode("none");
+      await changeMyPassword(currentPassword, newPassword)
+      setMsg({ type: "ok", text: "Contraseña actualizada correctamente." })
+      setMode("none")
     } catch (err: any) {
-      setMsg({ type: "err", text: err?.message ?? "No se pudo cambiar la contraseña." });
+      setMsg({ type: "err", text: err?.message ?? "No se pudo cambiar la contraseña." })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
-  if (isLoading) return <div className="p-6">Cargando...</div>;
-  if (!user) return <div className="p-6">No hay sesión.</div>;
+  if (isLoading)
+    return <div className="text-muted-foreground">Cargando...</div>
+
+  if (!user)
+    return <div className="text-muted-foreground">No hay sesión.</div>
 
   return (
-    <div
-      className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6"
-      style={{ backgroundColor: "rgba(62, 184, 185, 0.25)" }}
-    >
-      <Card className="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-white/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-center text-2xl font-bold">Mi cuenta</CardTitle>
-        </CardHeader>
+    <section className="space-y-12">
 
-        <CardContent className="space-y-6">
-          {/* Info principal (como la imagen) */}
-          <div className="space-y-2 text-[15px]">
-            <p className="font-semibold">
-              Nombre: <span className="font-normal">{user.full_name}</span>
-            </p>
-            <p className="font-semibold">
-              Email: <span className="font-normal">{user.email}</span>
-            </p>
-            <p className="font-semibold">
-              Teléfono: <span className="font-normal">{user.phone}</span>
-            </p>
-          </div>
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-4xl mx-auto"
+      >
 
-          {/* Mensajito */}
-          {msg && (
-            <div
-              className={[
-                "rounded-lg px-3 py-2 text-sm border",
-                msg.type === "ok"
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                  : "bg-red-50 border-red-200 text-red-700",
-              ].join(" ")}
-            >
-              {msg.text}
+        <Card className="rounded-2xl border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold tracking-tight">
+              Mi cuenta
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-10">
+
+            {/* Información */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <Info label="Nombre" value={user.full_name} />
+              <Info label="Email" value={user.email} />
+              <Info label="Teléfono" value={user.phone} />
+              <Info label="Dirección" value={user.direccion || "—"} />
+              <Info label="Cédula" value={user.cedula || "—"} />
             </div>
-          )}
 
-          {/* Botones */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Button
-              type="button"
-              onClick={openEdit}
-              className="bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold rounded-lg"
-            >
-              Modificar datos
-            </Button>
-
-            <Button
-              type="button"
-              onClick={openPassword}
-              className="bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold rounded-lg"
-            >
-              Cambiar Contraseña
-            </Button>
-          </div>
-
-          {/* Formularios condicionales */}
-          {mode === "edit" && (
-            <form onSubmit={handleSaveProfile} className="rounded-xl border bg-white/70 p-4 space-y-4">
-              <p className="font-semibold">Modificar datos</p>
-
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Nombre</Label>
-                <Input
-                  id="full_name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Tu nombre"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@email.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Ej: 8888 8888"
-                />
-              </div>
-
-              <div className="flex gap-3 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={closeForms} disabled={saving}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={saving}
-                  className="bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold"
+            {/* Mensaje */}
+            <AnimatePresence>
+              {msg && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className={`rounded-lg px-4 py-3 text-sm border ${
+                    msg.type === "ok"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                      : "bg-red-50 border-red-200 text-red-700"
+                  }`}
                 >
-                  {saving ? "Guardando..." : "Guardar"}
-                </Button>
-              </div>
-            </form>
-          )}
+                  {msg.text}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {mode === "password" && (
-            <form
-              onSubmit={handleChangePassword}
-              className="rounded-xl border bg-white/70 p-4 space-y-4"
-            >
-              <p className="font-semibold">Cambiar contraseña</p>
+            {/* Botones */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={openEdit}
+                className="bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]"
+              >
+                Modificar datos
+              </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="current_password">Contraseña actual</Label>
-                <Input
-                  id="current_password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="********"
-                />
-              </div>
+              <Button
+                onClick={openPassword}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                Cambiar contraseña
+              </Button>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="new_password">Nueva contraseña</Label>
-                <Input
-                  id="new_password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                />
-              </div>
+            {/* Formularios */}
+            <AnimatePresence mode="wait">
+              {mode === "edit" && (
+                <FormWrapper key="edit" title="Modificar datos" onSubmit={handleSaveProfile}>
+                  <Field label="Nombre">
+                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                  </Field>
+                  <Field label="Email">
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </Field>
+                  <Field label="Teléfono">
+                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  </Field>
+                  <Field label="Dirección">
+                    <Input value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+                  </Field>
+                  <Field label="Cédula">
+                    <Input value={cedula} onChange={(e) => setCedula(e.target.value)} />
+                  </Field>
+                  <FormButtons saving={saving} onCancel={closeForms} />
+                </FormWrapper>
+              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm_password">Confirmar nueva contraseña</Label>
-                <Input
-                  id="confirm_password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repetí la nueva contraseña"
-                />
-              </div>
+              {mode === "password" && (
+                <FormWrapper key="password" title="Cambiar contraseña" onSubmit={handleChangePassword}>
+                  <Field label="Contraseña actual">
+                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                  </Field>
+                  <Field label="Nueva contraseña">
+                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                  </Field>
+                  <Field label="Confirmar nueva contraseña">
+                    <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                  </Field>
+                  <FormButtons saving={saving} onCancel={closeForms} />
+                </FormWrapper>
+              )}
+            </AnimatePresence>
 
-              <div className="flex gap-3 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={closeForms} disabled={saving}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={saving}
-                  className="bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold"
-                >
-                  {saving ? "Cambiando..." : "Actualizar"}
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* Cerrar sesión abajo */}
-          <div className="pt-2">
-            <Button
-              onClick={handleLogout}
-              className="w-full bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold rounded-lg py-6"
-            >
-              Cerrar Sesión
+            <Button onClick={handleLogout} variant="destructive" className="w-full">
+              Cerrar sesión
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+
+          </CardContent>
+        </Card>
+
+      </motion.div>
+    </section>
+  )
+}
+
+/* ---------- Subcomponentes ---------- */
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-muted/40 border border-border rounded-xl p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-medium">{value}</p>
     </div>
-  );
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium">{label}</Label>
+      {children}
+    </div>
+  )
+}
+
+function FormWrapper({
+  title,
+  children,
+  onSubmit,
+}: {
+  title: string
+  children: React.ReactNode
+  onSubmit: (e: React.FormEvent) => void
+}) {
+  return (
+    <motion.form
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.3 }}
+      onSubmit={onSubmit}
+      className="space-y-4 border border-border bg-muted/40 rounded-xl p-6 overflow-hidden"
+    >
+      <p className="font-semibold text-base">{title}</p>
+      {children}
+    </motion.form>
+  )
+}
+
+function FormButtons({
+  saving,
+  onCancel,
+}: {
+  saving: boolean
+  onCancel: () => void
+}) {
+  return (
+    <div className="flex justify-end gap-3 pt-2">
+      <Button variant="outline" type="button" onClick={onCancel} disabled={saving}>
+        Cancelar
+      </Button>
+      <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
+        {saving ? "Guardando..." : "Guardar"}
+      </Button>
+    </div>
+  )
 }

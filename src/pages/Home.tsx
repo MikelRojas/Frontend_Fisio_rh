@@ -124,21 +124,21 @@ const Home: React.FC = () => {
   const next = () => setActive((p) => (p + 1) % services.length);
 
   return (
-    <div className="min-h-screen font-sans bg-gradient-to-b from-[#e7f7f7] via-white to-white">
+    <section className="space-y-16">
       {/* ================= HERO ================= */}
-      <section className="mx-auto max-w-[1280px] px-6 pt-14 pb-10 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      <section className="pt-6 pb-4 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div className="space-y-5">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 shadow-sm border">
-            <span className="text-sm font-semibold text-gray-800">Consultorio</span>
-            <span className="text-sm text-gray-500">•</span>
-            <span className="text-sm text-gray-700">Atención personalizada</span>
+            <span className="text-sm font-semibold text-slate-800">Consultorio</span>
+            <span className="text-sm text-slate-500">•</span>
+            <span className="text-sm text-slate-700">Atención personalizada</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-900 leading-tight">
             Fisioterapia RH
           </h1>
 
-          <p className="text-base md:text-lg font-medium text-gray-800 max-w-xl">
+          <p className="text-lg text-slate-600 max-w-xl leading-relaxed">
             {description}
           </p>
 
@@ -177,10 +177,10 @@ const Home: React.FC = () => {
 
             <div className="absolute bottom-4 left-4 right-4">
               <div className="rounded-xl bg-white/90 backdrop-blur-md px-4 py-3 border shadow-md">
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-slate-900">
                   Recuperación • Prevención • Bienestar
                 </p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-700">
                   Tratamientos basados en evaluación y objetivos reales del paciente.
                 </p>
               </div>
@@ -191,7 +191,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* ================= INFO ================= */}
-      <section className="mx-auto max-w-[1280px] px-6 pb-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* MAPA */}
         <Card className="md:col-span-1 rounded-2xl shadow-sm">
           <CardHeader>
@@ -233,14 +233,14 @@ const Home: React.FC = () => {
         </Card>
 
         {/* UBICACIÓN + HORARIO + FAQ */}
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-slate-200 shadow-sm bg-white">
           <CardHeader>
             <CardTitle>Información</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-gray-900">
+          <CardContent className="space-y-4 text-slate-900">
             <div className="space-y-1">
               <h3 className="font-extrabold text-lg">Ubicación</h3>
-              <p className="font-medium text-gray-800">{location}</p>
+              <p className="font-medium text-slate-800">{location}</p>
             </div>
 
             <Separator />
@@ -249,14 +249,14 @@ const Home: React.FC = () => {
               <h3 className="font-extrabold text-lg flex items-center gap-2">
                 <Clock className="h-5 w-5" /> Horario
               </h3>
-              <p className="font-medium text-gray-800">Lunes a viernes de 1:00 pm a 7:00 pm</p>
+              <p className="font-medium text-slate-800">Lunes a viernes de 1:00 pm a 7:00 pm</p>
             </div>
 
             <Separator />
 
             <div className="space-y-2">
               <h3 className="font-extrabold text-lg">Preguntas frecuentes</h3>
-              <p className="font-medium text-gray-800">
+              <p className="font-medium text-slate-800">
                 Si tienes dudas sobre nuestros servicios, nuestro asistente virtual puede ayudarte.
               </p>
             </div>
@@ -268,13 +268,13 @@ const Home: React.FC = () => {
           <CardHeader>
             <CardTitle>Contáctanos</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-gray-900">
+          <CardContent className="space-y-4 text-slate-900">
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Phone className="h-5 w-5 mt-0.5" />
                 <div>
                   <p className="font-semibold">Teléfono</p>
-                  <p className="font-medium text-gray-800">{CONTACT_PHONE}</p>
+                  <p className="font-medium text-slate-800">{CONTACT_PHONE}</p>
                 </div>
               </div>
 
@@ -283,7 +283,7 @@ const Home: React.FC = () => {
                 <div>
                   <p className="font-semibold">Correo</p>
                   <a
-                    className="font-medium text-gray-800 underline underline-offset-4"
+                    className="font-medium text-slate-800 underline underline-offset-4"
                     href={`mailto:${CONTACT_EMAIL}`}
                   >
                     {CONTACT_EMAIL}
@@ -313,13 +313,13 @@ const Home: React.FC = () => {
       </section>
 
       {/* ================= CARRUSEL DE SERVICIOS ================= */}
-      <section className="mx-auto max-w-[1280px] px-6 pb-14">
+      <section className="space-y-6">
         <div className="flex items-end justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">
               Servicios principales
             </h2>
-            <p className="text-gray-700 font-medium">
+            <p className="text-slate-700 font-medium">
               Un vistazo rápido a lo que ofrecemos en el consultorio.
             </p>
           </div>
@@ -345,18 +345,19 @@ const Home: React.FC = () => {
                 <div key={idx} className="min-w-full">
                   <Card className="rounded-2xl overflow-hidden shadow-sm">
                     <div className="grid grid-cols-1 md:grid-cols-2">
-                      <div className="relative">
-                        <img
-                          src={s.img}
-                          alt={s.title}
-                          className="w-full h-[260px] md:h-[320px] object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                      <div className="relative w-full h-[280px] md:h-[340px] p-4 bg-white">
+                        <div className="relative w-full h-full overflow-hidden rounded-xl">
+                          <img
+                            src={s.img}
+                            alt={s.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       </div>
 
                       <CardContent className="p-6 md:p-8 flex flex-col justify-center gap-3">
-                        <h3 className="text-2xl font-extrabold text-gray-900">{s.title}</h3>
-                        <p className="text-gray-700 font-medium leading-relaxed">{s.desc}</p>
+                        <h3 className="text-2xl font-extrabold text-slate-900">{s.title}</h3>
+                        <p className="text-slate-700 font-medium leading-relaxed">{s.desc}</p>
                       </CardContent>
                     </div>
                   </Card>
@@ -374,7 +375,9 @@ const Home: React.FC = () => {
                 aria-label={`Ir al servicio ${i + 1}`}
                 className={[
                   "h-2.5 w-2.5 rounded-full transition-all",
-                  i === active ? "bg-gray-900 w-6" : "bg-gray-300 hover:bg-gray-400",
+                  i === active 
+                    ? "bg-teal-600 w-6" 
+                    : "bg-slate-300 hover:bg-slate-400",
                 ].join(" ")}
               />
             ))}
@@ -383,44 +386,87 @@ const Home: React.FC = () => {
       </section>
 
       {/* ================= FOOTER ================= */}
-      <footer className="border-t bg-white">
-        <div className="mx-auto max-w-[1280px] px-6 py-8 flex flex-col md:flex-row gap-6 md:items-center md:justify-between">
-          <div className="space-y-1">
-            <p className="font-extrabold text-gray-900">Fisioterapia RH</p>
-            <p className="text-sm text-gray-600">
-              Tel: {CONTACT_PHONE} •{" "}
-              <a className="underline underline-offset-4" href={`mailto:${CONTACT_EMAIL}`}>
-                {CONTACT_EMAIL}
-              </a>
-            </p>
+      <footer className="border-t border-slate-200 bg-slate-50/60 mt-16">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+
+            {/* Columna 1 – Marca */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-extrabold text-slate-900">
+                Fisioterapia RH
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed max-w-sm">
+                Atención personalizada enfocada en recuperación, prevención
+                y bienestar físico integral.
+              </p>
+            </div>
+
+            {/* Columna 2 – Contacto */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-slate-900">Contacto</h4>
+              <div className="space-y-1 text-sm text-slate-700">
+                <p>Tel: {CONTACT_PHONE}</p>
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="underline underline-offset-4 hover:text-teal-600 transition"
+                >
+                  {CONTACT_EMAIL}
+                </a>
+              </div>
+            </div>
+
+            {/* Columna 3 – Redes */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-slate-900">Redes Sociales</h4>
+
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline" className="rounded-xl">
+                  <a
+                    href="https://www.facebook.com/lenismarcela.rojashurtado"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Facebook <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+
+                <Button asChild variant="outline" className="rounded-xl">
+                  <a
+                    href="https://www.instagram.com/lenismrh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Instagram <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+
+                <Button asChild className="rounded-xl">
+                  <a
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    WhatsApp
+                  </a>
+                </Button>
+              </div>
+            </div>
+
           </div>
 
-          <div className="flex flex-wrap gap-3 items-center">
-            <Button asChild variant="outline" className="rounded-xl">
-              <a href="https://www.facebook.com/lenismarcela.rojashurtado" target="_blank" rel="noopener noreferrer">
-                Facebook <ExternalLink className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
-
-            <Button asChild variant="outline" className="rounded-xl">
-              <a href="https://www.instagram.com/lenismrh" target="_blank" rel="noopener noreferrer">
-                Instagram <ExternalLink className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
-
-            <Button asChild className="rounded-xl">
-              <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="mr-2 h-4 w-4" />
-                WhatsApp
-              </a>
-            </Button>
+          {/* Línea inferior */}
+          <div className="mt-12 pt-6 border-t border-slate-200 text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} Fisioterapia RH. Todos los derechos reservados.
           </div>
+
         </div>
       </footer>
 
       {/* ================= CHATBOT ================= */}
       <ChatbotWidget apiBaseUrl={API_URL}/>
-    </div>
+    </section>
   );
 };
 

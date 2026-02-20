@@ -49,10 +49,13 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
     <nav
       role="navigation"
       aria-label="Main navigation"
-      className={cn("relative z-40 border-b bg-background/80 backdrop-blur-sm", className)}
+      className={cn(
+        "sticky top-0 z-50 border-b border-slate-200 bg-white/70 backdrop-blur-md",
+        className
+      )}
       {...rootProps}
     >
-      <div className="mx-auto max-w-[1280px] px-4 py-3 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {/* ✅ MOBILE MENU */}
           {collapsibleOnMobile && (
@@ -70,7 +73,7 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
                 {/* Header */}
                 <div className="px-5 py-4 border-b flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold">Menú</span>
+                  <span className="text-sm font-semibold text-primary">Menú</span>
                     <span className="text-xs text-muted-foreground">Navegación</span>
                   </div>
                   {/* El X ya lo pone shadcn, esto es opcional */}
@@ -102,7 +105,7 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
                               cn(
                                 "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
                                 "hover:bg-muted/50",
-                                isActive && "bg-muted font-semibold"
+                                isActive && "bg-teal-50 text-teal-600 font-semibold"
                               )
                             }
                           >
@@ -152,7 +155,7 @@ const CustomNavbar: React.FC<CustomNavbarProps> = ({
                             cn(
                               navigationMenuTriggerStyle(),
                               "transition-colors",
-                              isActive && "bg-muted text-primary font-semibold"
+                              isActive && "bg-teal-50 text-teal-600 font-semibold rounded-xl"
                             )
                           }
                         >
@@ -204,7 +207,9 @@ function NavActions() {
   if (!isAuthenticated || !user) {
     return (
       <Link to="/login">
-        <Button>Login</Button>
+        <Button className="bg-teal-500 hover:bg-teal-600 text-white shadow-sm rounded-xl px-5">
+          Login
+        </Button>
       </Link>
     )
   }
@@ -219,8 +224,7 @@ function NavActions() {
       <Link
         to="/account"
         className={cn(
-          "h-10 w-10 inline-flex items-center justify-center rounded-md border",
-          "hover:bg-muted/40 transition"
+          "h-10 w-10 inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-teal-50 transition-all shadow-sm"
         )}
         aria-label="Cuenta"
         title="Cuenta"
@@ -228,7 +232,10 @@ function NavActions() {
         <User className="h-5 w-5" />
       </Link>
 
-      <Button onClick={handleLogout} className="bg-[#2f8f90] hover:bg-[#277a7b] text-white font-semibold">
+      <Button 
+        onClick={handleLogout}
+        className="bg-teal-500 hover:bg-teal-600 text-white shadow-sm rounded-xl px-5 transition-all duration-200"
+      >
         Salir
       </Button>
     </div>
