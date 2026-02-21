@@ -779,9 +779,11 @@ const Appointments: React.FC = () => {
                             type="button"
                             disabled={disabled}
                             onClick={() => {
+                              const withTimezone = new Date(iso).toISOString() // 👈 CLAVE
+                            
                               setForm((prev) => {
-                                if (prev.proposed_starts.includes(iso)) return prev
-                                return { ...prev, proposed_starts: [...prev.proposed_starts, iso] }
+                                if (prev.proposed_starts.includes(withTimezone)) return prev
+                                return { ...prev, proposed_starts: [...prev.proposed_starts, withTimezone] }
                               })
                             }}
                             className={[
