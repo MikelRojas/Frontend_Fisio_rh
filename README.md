@@ -62,12 +62,12 @@ Garantiza acceso restringido y protección de datos clínicos.
 
 # 👥 Roles del Sistema
 
-## 👩‍⚕️ Administrador
+## Administrador
 - Gestión de agenda y confirmación de citas  
 - Administración de expedientes  
 - Gestión de facturación  
 
-## 🧑 Paciente
+## Paciente
 - Solicitud y consulta de citas  
 - Acceso a expediente médico  
 - Interacción con asistente virtual  
@@ -80,7 +80,7 @@ Página pública del consultorio y panel editable para la administradora.
 
 ---
 
-## 🧑 Paciente
+## Paciente
 
 - Información dinámica del consultorio  
 - Google Maps integrado  
@@ -96,7 +96,7 @@ Página pública del consultorio y panel editable para la administradora.
 
 ---
 
-## 👩‍⚕️ Admin
+## Admin
 
 - Edición de descripción  
 - Edición dinámica de ubicación  
@@ -114,7 +114,7 @@ Sistema central de solicitudes con validación en tiempo real.
 
 ---
 
-## 🧑 Paciente
+## Paciente
 
 - Selección obligatoria de 3 horarios disponibles  
 - Seguimiento de estado (`requested`, `confirmed`, `cancelled`)  
@@ -129,7 +129,7 @@ Sistema central de solicitudes con validación en tiempo real.
 
 ---
 
-## 👩‍⚕️ Admin
+## Admin
 
 - Filtros por estado y fecha  
 - Confirmación de propuesta específica  
@@ -184,7 +184,7 @@ Gestión clínica estructurada con historial y control de tratamiento vigente.
 
 ---
 
-## 👩‍⚕️ Administrador
+## Administrador
 
 - CRUD completo de expedientes  
 - Vinculación por correo  
@@ -200,7 +200,7 @@ Gestión clínica estructurada con historial y control de tratamiento vigente.
 
 ---
 
-## 🧑 Paciente
+## Paciente
 
 - Visualización de expediente  
 - Historial clínico  
