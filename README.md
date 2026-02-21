@@ -1,243 +1,222 @@
-# Fisioterapia RH – Plataforma Web de Gestión Clínica
+<h1 align="center">🩺 Fisioterapia RH</h1>
+<h3 align="center">Plataforma Web de Gestión Clínica</h3>
 
-## Overview
+<p align="center">
+  Sistema full-stack para digitalizar y centralizar la gestión clínica y administrativa.
+</p>
 
-Fisioterapia RH es una plataforma web **full-stack** desarrollada para digitalizar y optimizar la gestión clínica y administrativa de una clínica de fisioterapia.
+<p align="center">
+  <img src="public/images/readme/img1.png" width="800"/>
+</p>
 
-Centraliza procesos como:
-
-- Gestión de pacientes  
-- Agenda inteligente con validación de conflictos  
-- Solicitud y confirmación de citas  
-- Expediente médico digital  
-- Gestión de pagos y facturación  
-- Control de acceso por roles  
-- Asistente virtual  
-
-El proyecto fue desarrollado bajo un enfoque formal de **Ingeniería de Software**.
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-React-blue?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/Backend-Flask-black?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-blue?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/Auth-Token%20Based-green?style=for-the-badge"/>
+</p>
 
 ---
 
-## Arquitectura
+# 🧠 Overview
 
-Arquitectura cliente-servidor desacoplada:
+Plataforma desarrollada bajo un enfoque formal de Ingeniería de Software que integra:
 
-- **Frontend:** React + TypeScript + shadcn/ui
-- **Backend:** Python + Flask  
-- **Base de datos:** PostgreSQL  
-- **Comunicación:** REST API  
-- **Autenticación:** basada en tokens  
-- **Control de acceso:** por roles  
+- 🧑‍⚕️ Gestión de pacientes  
+- 📅 Agenda inteligente con validación de conflictos  
+- 📩 Solicitud y confirmación de citas  
+- 📂 Expediente médico digital  
+- 💳 Pagos y facturación  
+- 🔐 Control de acceso por roles  
+- 🤖 Asistente virtual  
 
+---
 
+# 🏗 Arquitectura
+
+<p align="center">
 React → Flask API → PostgreSQL
+</p>
 
+| Capa | Tecnología |
+|------|------------|
+| Frontend | React + TypeScript + shadcn/ui |
+| Backend | Python + Flask |
+| Base de Datos | PostgreSQL |
+| Comunicación | REST API |
+| Autenticación | Token Based |
+| Autorización | Roles (admin / patient) |
 
 ---
 
-## Seguridad y Acceso
+# 🔐 Seguridad
 
 - Registro, login y recuperación de contraseña  
 - Contexto global de autenticación  
 - Protección de rutas administrativas  
 - Gestión segura de tokens  
 
-Garantiza protección de datos clínicos y acceso restringido según el rol.
+Garantiza acceso restringido y protección de datos clínicos.
 
 ---
 
-## Roles del Sistema
+# 👥 Roles del Sistema
 
-### Administrador
-- Gestión de agenda y horarios  
-- Confirmación de citas  
-- Registro de tratamientos  
-- Gestión de expedientes y facturación  
+## 👩‍⚕️ Administrador
+- Gestión de agenda y confirmación de citas  
+- Administración de expedientes  
+- Gestión de facturación  
 
-### Paciente
-- Registro e inicio de sesión  
+## 🧑 Paciente
 - Solicitud y consulta de citas  
 - Acceso a expediente médico  
 - Interacción con asistente virtual  
 
+---
 
-## Home – Landing Dinámica
+# 🏠 Home – Landing Dinámica
 
-El Home funciona como página pública del consultorio y panel editable para la administradora.  
-Consume información dinámica desde la API y adapta funcionalidades según el rol del Paciente.
+Página pública del consultorio y panel editable para la administradora.
 
 ---
 
-#### Paciente
+## 🧑 Paciente
 
-- Visualización dinámica de información del consultorio.
-- Mapa interactivo con Google Maps.
-- Horario y datos de contacto.
-- Acceso directo a WhatsApp y correo.
-- Carrusel manual de servicios.
-- Chatbot integrado.
+- Información dinámica del consultorio  
+- Google Maps integrado  
+- Contacto directo (WhatsApp / Email)  
+- Carrusel de servicios  
+- Chatbot integrado  
 
-[![Mira el video](https://img.youtube.com/vi/QgtuNl477kU/0.jpg)](https://youtu.be/QgtuNl477kU)
-
----
-
-#### Admin
-
-- Edición de descripción del consultorio.
-- Edición de ubicación (actualiza mapa dinámicamente).
-- Funcionalidades protegidas por control de acceso por rol.
-
-<img src="public/images/readme/home_admin.png" alt="Home admin" width="480"/>
-
-
-## Citas – Gestión Inteligente de Agenda
-
-Módulo central del sistema donde pacientes solicitan citas y la administradora gestiona confirmaciones, pagos y estados.
-
-Integra validación de disponibilidad en tiempo real, control de estado y lógica diferenciada por rol.
+<p align="center">
+  <a href="https://youtu.be/QgtuNl477kU">
+    <img src="https://img.youtube.com/vi/QgtuNl477kU/0.jpg" width="600"/>
+  </a>
+</p>
 
 ---
 
-#### Paciente
+## 👩‍⚕️ Admin
 
-- Creación de cita con descripción del caso.
-- Selección obligatoria de 3 propuestas de horario según disponibilidad semanal.
-- Consulta de estado (requested, confirmed, cancelled).
-- Visualización de fecha asignada.
-- Eliminación de cita (si aplica).
-- Vista detallada con información completa.
+- Edición de descripción  
+- Edición dinámica de ubicación  
+- Control de acceso por rol  
 
-[![Mira el video](https://img.youtube.com/vi/ahpfHCHXFKY/0.jpg)](https://youtu.be/ahpfHCHXFKY)
-
----
-
-#### Admin
-
-- Visualización de todas las citas del sistema.
-- Filtros por estado, fecha y paciente.
-- Confirmación de una propuesta específica.
-- Cancelación con motivo.
-- Asignación y edición desde Agenda.
-- Gestión de estado de pago (toggle pagado/no pagado).
-- Acceso a teléfono del paciente desde detalle.
-
-[![Mira el video](https://img.youtube.com/vi/S1YaINKZ-RE/0.jpg)](https://youtu.be/S1YaINKZ-RE)
+<p align="center">
+  <img src="public/images/readme/home_admin.png" width="600"/>
+</p>
 
 ---
 
-### Lógica Implementada
+# 📅 Gestión Inteligente de Citas
 
-- Validación de 3 horarios obligatorios.
-- Consulta dinámica de disponibilidad semanal.
-- Estados controlados: `requested`, `confirmed`, `cancelled`.
-- Manejo optimista de actualización de pago.
-- Render condicional según rol.
-- Modales controlados por estado global.
-- Integración completa con REST API (Se envian emails de confirmacion).
-
-## Agenda Profesional y Control de Disponibilidad
-
-Módulo administrativo de planificación que permite gestionar la agenda clínica en vista mensual y diaria, con control de colisiones de horario y múltiples tipos de entradas.
-
-Diseñado para centralizar citas, eventos y bloqueos en una sola interfaz interactiva.
+Sistema central de solicitudes con validación en tiempo real.
 
 ---
 
-#### Funcionalidades
+## 🧑 Paciente
 
-- Vista mensual con navegación entre meses.
-- Vista diaria tipo timeline con entradas detalladas.
-- Creación rápida mediante botón flotante.
-- Edición y eliminación desde modal.
-- Validación automática de choques de horario.
-- Integración directa con citas del sistema.
+- Selección obligatoria de 3 horarios disponibles  
+- Seguimiento de estado (`requested`, `confirmed`, `cancelled`)  
+- Eliminación de cita  
+- Vista detallada  
 
-<img src="public/images/readme/planner1.png" alt="Home admin" width="480"/>
-
----
-
-### Tipos de Entradas
-
-**1️⃣ Evento**
-- Eventos personalizados con rango horario.
-- Título y nota opcional.
-- Validación de hora inicio < hora fin.
-
-**2️⃣ Cita Manual**
-- Creación de cita sin pasar por solicitud del paciente.
-- Asociación opcional a Paciente registrado.
-- Duración fija de 1 hora.
-- Sincronizada con módulo de citas.
-
-**3️⃣ Bloqueo**
-- Bloqueo de tiempo no disponible.
-- Requiere motivo obligatorio.
-- Previene asignación de citas en ese rango.
-
-<img src="public/images/readme/planner2.png" alt="Home admin" width="480"/>
+<p align="center">
+  <a href="https://youtu.be/ahpfHCHXFKY">
+    <img src="https://img.youtube.com/vi/ahpfHCHXFKY/0.jpg" width="600"/>
+  </a>
+</p>
 
 ---
 
-### Edición Avanzada
+## 👩‍⚕️ Admin
 
-- Modificación de horario con validación.
-- Cambio de Paciente en citas manuales.
-- Eliminación con confirmación segura.
-- Feedback visual ante errores o conflictos.
+- Filtros por estado y fecha  
+- Confirmación de propuesta específica  
+- Cancelación con motivo  
+- Control de pago  
+- Acceso rápido a contacto  
 
-<img src="public/images/readme/planner3.png" alt="Home admin" width="480"/>
-
----
-
-### Lógica Implementada
-
-- Arquitectura basada en hooks personalizados (`usePlannerData`).
-- Control de estado centralizado.
-- Validación de rangos horarios en frontend y backend.
-- Prevención de solapamiento de eventos.
-- Render condicional por tipo (`event`, `appointment`, `block`).
-- Sincronización automática tras cambios.
+<p align="center">
+  <a href="https://youtu.be/S1YaINKZ-RE">
+    <img src="https://img.youtube.com/vi/S1YaINKZ-RE/0.jpg" width="600"/>
+  </a>
+</p>
 
 ---
 
-## Expedientes – Gestión Clínica Digital
+# 🗓 Agenda Profesional
 
-Módulo central para la administración y consulta de expedientes médicos digitales, con control por rol, sincronización automática y manejo avanzado de diagnósticos.
+Vista mensual y diaria tipo timeline con validación de colisiones.
 
-Permite gestionar información clínica estructurada y mantener historial de tratamientos con estado vigente/no vigente.
+<p align="center">
+  <img src="public/images/readme/planner1.png" width="600"/>
+</p>
+
+## Tipos de entradas
+
+### 1️⃣ Evento
+- Título + nota opcional  
+- Validación inicio < fin  
+
+### 2️⃣ Cita Manual
+- Asociación a paciente  
+- Duración fija  
+- Sincronizada con módulo de citas  
+
+### 3️⃣ Bloqueo
+- Motivo obligatorio  
+- Previene asignación de citas  
+
+<p align="center">
+  <img src="public/images/readme/planner2.png" width="600"/>
+</p>
+
+<p align="center">
+  <img src="public/images/readme/planner3.png" width="600"/>
+</p>
 
 ---
 
-#### Administrador
+# 📂 Expedientes Digitales
 
-- Listado completo de expedientes.
-- Búsqueda dinámica con debounce.
-- Creación, edición y eliminación de expedientes.
-- Vinculación opcional a usuario existente (por correo).
-- Gestión de diagnósticos y tratamientos.
-- Marcado dinámico de tratamiento vigente mediante `Switch`.
-- Sincronización automática de citas completadas al expediente.
-
-[![Mira el video](https://img.youtube.com/vi/aKs6vk8ue-w/0.jpg)](https://youtu.be/aKs6vk8ue-w)
+Gestión clínica estructurada con historial y control de tratamiento vigente.
 
 ---
 
-#### Paciente
+## 👩‍⚕️ Administrador
 
-- Visualización de su expediente vinculado.
-- Consulta de datos personales.
-- Historial de diagnósticos y tratamientos.
-- Indicador visual de tratamiento actual.
+- CRUD completo de expedientes  
+- Vinculación por correo  
+- Gestión de diagnósticos  
+- Tratamiento vigente con Switch  
+- Sincronización automática de citas  
 
-<img src="public/images/readme/expediente_user.png" alt="Home admin" width="480"/>
+<p align="center">
+  <a href="https://youtu.be/aKs6vk8ue-w">
+    <img src="https://img.youtube.com/vi/aKs6vk8ue-w/0.jpg" width="600"/>
+  </a>
+</p>
 
 ---
 
-### Lógica Implementada
+## 🧑 Paciente
 
-- Control de acceso basado en rol (`admin` / `patient`).
-- Cache local de expedientes expandidos.
-- Búsqueda con debounce para optimizar requests.
-- Sincronización automática de citas completadas.
-- Validaciones de formulario.
-- Componentización avanzada con Dialogs reutilizables.
+- Visualización de expediente  
+- Historial clínico  
+- Indicador de tratamiento activo  
+
+<p align="center">
+  <img src="public/images/readme/expediente_user.png" width="600"/>
+</p>
+
+---
+
+# ⚙️ Lógica Técnica Destacada
+
+- Arquitectura basada en hooks personalizados  
+- Validación frontend + backend  
+- Prevención de solapamientos  
+- Render condicional por rol  
+- Manejo optimista de estado  
+- Sincronización automática con REST API  
